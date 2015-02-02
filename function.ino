@@ -78,6 +78,8 @@ void fnctn_checkbuttons() {
   
   if(gamestatus=="gameover"){
     if(gb.buttons.pressed(BTN_A)){
+      nbAlivePlayerTeam0=3;
+      nbAlivePlayerTeam1=3;
       gamestatus="selectMap";
     }
   } 
@@ -346,13 +348,22 @@ void fnctn_nextPlayer(){
 //##################################################################
 void fnctn_checkDead(){
   for(byte i=0;i<6;i++){
-    if((allPlayer[i].x <= projPositionX && allPlayer[i].x+4 >= projPositionX && allPlayer[i].y <= projPositionY && allPlayer[i].y+4 >= projPositionY) || (allPlayer[i].y>50) || (allPlayer[i].x<-3) || (allPlayer[i].y>84)){
+    if(allPlayer[i].x <= projPositionX && allPlayer[i].x+4 >= projPositionX && allPlayer[i].y <= projPositionY && allPlayer[i].y+4 >= projPositionY ){
       if(allPlayer[i].dead==0){
         if(allPlayer[i].team==0){nbAlivePlayerTeam0 = nbAlivePlayerTeam0 - 1;}
         else{nbAlivePlayerTeam1 = nbAlivePlayerTeam1-1;}
       }
       allPlayer[i].dead=1;
     }
+    if((allPlayer[i].y>48) || (allPlayer[i].x<-3) || (allPlayer[i].x>83)){
+      if(allPlayer[i].dead==0){
+        if(allPlayer[i].team==0){nbAlivePlayerTeam0 = nbAlivePlayerTeam0 - 1;}
+        else{nbAlivePlayerTeam1 = nbAlivePlayerTeam1-1;}
+      }
+      allPlayer[i].dead=1;
+    }
+    
+    
     
   }
   if(nbAlivePlayerTeam0==0 || nbAlivePlayerTeam1 == 0){
@@ -361,8 +372,6 @@ void fnctn_checkDead(){
     currentPlayer = 0;
     previousPlayerTeam0 = 0;
     previousPlayerTeam1 = 1;
-    nbAlivePlayerTeam0=3;
-    nbAlivePlayerTeam1=3;
     jumpStatus=0;
   }
 }
@@ -374,8 +383,17 @@ void fnctn_checkPlayerPos(){
     if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0){
       byte tmpFall = allPlayer[pl].fall+1;
       for(byte calcFall=0; calcFall<tmpFall;calcFall++){
-        if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0 && allPlayer[pl].y<50){
-          allPlayer[pl].y=allPlayer[pl].y+1;
+        if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0){
+          if(allPlayer[pl].y>48)
+          {
+            if(allPlayer[pl].dead==0){
+              if(allPlayer[pl].team==0){nbAlivePlayerTeam0 = nbAlivePlayerTeam0 - 1;}
+              else{nbAlivePlayerTeam1 = nbAlivePlayerTeam1-1;}
+            }
+            allPlayer[pl].dead=1;
+          }else{
+            allPlayer[pl].y=allPlayer[pl].y+1;
+          }
         }
       }
       allPlayer[pl].fall=allPlayer[pl].fall + 1;

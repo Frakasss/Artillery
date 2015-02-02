@@ -117,6 +117,10 @@ void loop(){
       
       fnctn_checkJump();
       if(jumpStatus<3){fnctn_checkPlayerPos();}
+      if(allPlayer[currentPlayer-1].dead==1){
+        fnctn_checkDead();
+        fnctn_nextPlayer();
+      }
       
       if(power==0 && jumpStatus==0){outpt_cursor();}
     }

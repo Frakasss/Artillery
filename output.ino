@@ -179,26 +179,28 @@ void outpt_missed() {
 //##################################################################
 //##################################################################
 void outpt_gameOver(){
-  if(nbAlivePlayerTeam0==0){
+  if(nbAlivePlayerTeam0<1){
     gb.display.setColor(WHITE);
-    gb.display.fillRect(4,5,75,24);
+    gb.display.fillRect(4,5,76,24);
     gb.display.setColor(BLACK);
     gb.display.drawRect(5,6,74,22);
     gb.display.cursorY = 11;
     gb.display.cursorX = 22;
     gb.display.println("Game Over");
     gb.display.cursorX = 7;
-    gb.display.println("CPU is victorious!");   
+    gb.display.println("Alien erased all!");   
   }else{
     gb.display.setColor(WHITE);
     gb.display.fillRect(2,5,80,24);
     gb.display.setColor(BLACK);
     gb.display.drawRect(3,6,78,22);
-    gb.display.cursorY = 12;
+    gb.display.cursorY = 8;
     gb.display.cursorX = 10;
     gb.display.println("Congratulations!");
-    gb.display.cursorX = 19;
-    gb.display.println("Player won!");   
+    gb.display.cursorX = 14;
+    gb.display.println("Human cleaned"); 
+    gb.display.cursorX = 16;
+    gb.display.println("this planet!");
   }
   
 }
