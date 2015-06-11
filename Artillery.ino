@@ -13,7 +13,23 @@ typedef struct {
   byte fall;
 } Player;
 
+typedef struct{
+  byte alien;
+  byte target;
+  byte power1;
+  byte angle1;
+  boolean dir1;
+  byte collx1;
+  byte colly1;
+  byte power2;
+  byte angle2;
+  boolean dir2;
+  byte collx2;
+  byte colly2; 
+} CpuMemory;
+
 Player allPlayer[6];
+CpuMemory cpuMem[12];
 
 //Game
 String gamestatus;
@@ -112,8 +128,13 @@ void loop(){
       outpt_players();
       outpt_power();
       
-      if(allPlayer[currentPlayer-1].team==0){fnctn_checkbuttons();}
-      else{fnctn_ia();}      
+      if(allPlayer[currentPlayer-1].team==0){
+        fnctn_checkbuttons();}
+      else{
+        fnctn_ia();
+        gb.display.print(cpuMem[currentPlayer/2].target);
+        gb.display.print(allPlayer[cpuMem[currentPlayer/2].target].dead);
+      }      
       
       fnctn_checkJump();
       if(jumpStatus<3){fnctn_checkPlayerPos();}

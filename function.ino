@@ -114,7 +114,6 @@ void fnctn_definePlayer(){
   int tmp2; 
   int randm[21];
   
-
   for(int rdm=0;rdm<21;rdm++){randm[rdm] = rdm+1;}
   for(int rdm=0;rdm<21;rdm++){
     tmp1 = random(0,21);
@@ -146,6 +145,23 @@ void fnctn_definePlayer(){
     allPlayer[i].dir = 1;
     if(canonX>10){allPlayer[i].dir = -1;}
     allPlayer[i].fall=0;
+    
+    if(allPlayer[i].team==1){
+      cpuMem[i/2].alien = i;
+      cpuMem[i/2].target = i-1;
+      cpuMem[i/2].power1=5;
+      cpuMem[i/2].angle1=4;
+      cpuMem[i/2].dir1=0;
+      cpuMem[i/2].collx1=-4;
+      cpuMem[i/2].colly1=20;
+      cpuMem[i/2].power2=5;
+      cpuMem[i/2].angle2=4;
+      cpuMem[i/2].dir2=1;
+      cpuMem[i/2].collx2=85;
+      cpuMem[i/2].colly2=20;      
+    }
+    
+    
   }
 }
 
@@ -229,7 +245,7 @@ void fn_nextProjPosition(){
   projPositionX = projPositionX + projTrajX;
   projPositionY = projPositionY + projTrajY;
   projTrajX = projTrajX + 0; //Wind
-  projTrajY = projTrajY + (0.3); //Gravity
+  projTrajY = projTrajY + (0.23); //Gravity
 }
 
 //##################################################################
@@ -421,7 +437,45 @@ void fnctn_checkJump(){
 //##################################################################
 //##################################################################
 void fnctn_ia(){
+  
+  
+  
   if(ia_power==0){
+
+    byte target = cpuMem[currentPlayer/2].target;
+    if(allPlayer[target].dead==1){
+      byte check = 0;
+      byte checkedPlayer = 0;
+      while (check==0){
+        if(allPlayer[checkedPlayer].dead==0 && allPlayer[checkedPlayer].team==0){
+          target=checkedPlayer;
+          cpuMem[currentPlayer/2].target=checkedPlayer;
+          check=0;
+        }else{
+          checkedPlayer=checkedPlayer+1;
+        }
+      }
+    }      
+    /*     
+    if(cpuMem[currentPlayer/2].collx1>allPlayer[target].x){//shoot should be shorter than shoot1
+      if(cpuMem[currentPlayer/2].collx2>allPlayer[target].x){//shoot should be shorter than shoot2
+        if(cpuMem[currentPlayer/2].collx1>cpuMem[currentPlayer/2].collx2){
+          ia_power = cpuMem[currentPlayer/2].power2-1;
+          ia_angle = cpuMem[currentPlayer/2].angle2;
+        }else{
+          ia_power = cpuMem[currentPlayer/2].power1-1;
+          ia_angle = cpuMem[currentPlayer/2].angle1;
+        }
+      }else{//shoot should be longer than shoot2
+      
+      }
+    }else{//shoot should be longer than shoot1
+      if(cpuMem[currentPlayer/2].collx2>allPlayer[target].x){//shoot should be shorter than shoot2
+        
+      }else{//shoot should be longer than shoot2
+      
+      }
+    }*/
     ia_power = 5;
     ia_angle = 4;
     timer = 10;
