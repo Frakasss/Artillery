@@ -1,88 +1,81 @@
 //##################################################################
 //##################################################################
 void fnctn_checkbuttons() {
-  if(gamestatus=="selectMap"){
-    if(gb.buttons.pressed(BTN_DOWN) && gamelevel+3<=nbAvailableLevel){gamelevel = gamelevel + 3;}
-    if(gb.buttons.pressed(BTN_UP)   && gamelevel-3>=1){gamelevel = gamelevel - 3;}
-    if(gb.buttons.pressed(BTN_RIGHT) && gamelevel+1<=nbAvailableLevel){gamelevel = gamelevel + 1;}
-    if(gb.buttons.pressed(BTN_LEFT) && gamelevel-1>=1){gamelevel = gamelevel - 1;}
-    if(gb.buttons.pressed(BTN_A)){gamestatus="newLevel";}
-  }
-  
-  if(gamestatus=="loading"){
-    if(gb.buttons.released(BTN_A)){gamestatus="running";}
-  }
-  
-  if(gamestatus=="loadingPause"){
-    if(gb.buttons.released(BTN_A)){gamestatus="pause";}
-  }
-  
-  if(gamestatus=="running"){
-    if(gb.buttons.repeat(BTN_A,1) && power<10){
-      power = power+1;
-    }else{
-      if(power>0 ){
-        gamestatus="animFire";
-        float dir;
-        if(allPlayer[currentPlayer-1].dir==1){
-          dir = 1;
-          projPositionX = (allPlayer[currentPlayer-1].x+4);
-        }else{
-          dir = -1;
-          projPositionX = (allPlayer[currentPlayer-1].x-1);      
-        }
-        projPositionY = allPlayer[currentPlayer-1].y-1;
-        projTrajX = (((trajParamX[angle-1])/5)*(power/3))*dir;
-        projTrajY = ((trajParamY[angle-1])/5)*(power/3);
-      }else{
-        if(gb.buttons.repeat(BTN_UP,1))   {if(angle>1) {angle = angle-1;}}
-        if(gb.buttons.repeat(BTN_DOWN,1)) {if(angle<15){angle = angle+1;}}
-        
-        if(gb.buttons.pressed(BTN_RIGHT)){
-          outpt_soundfx(3,1);
-          allPlayer[currentPlayer-1].dir = 1;
-        }else{
-          if(gb.buttons.repeat(BTN_RIGHT,1)){
-            outpt_soundfx(3,1);
-            if(gb.display.getPixel(allPlayer[currentPlayer-1].x+4,allPlayer[currentPlayer-1].y+1)==0){
-              allPlayer[currentPlayer-1].x = allPlayer[currentPlayer-1].x + 1;
-        } } }
-        
-        if(gb.buttons.pressed(BTN_LEFT)){
-          outpt_soundfx(3,1);
-          allPlayer[currentPlayer-1].dir = 0;
-        }else{
-          if(gb.buttons.repeat(BTN_LEFT,1)){
-            outpt_soundfx(3,1);
-            if(gb.display.getPixel(allPlayer[currentPlayer-1].x-1,allPlayer[currentPlayer-1].y+1)==0){
-              allPlayer[currentPlayer-1].x = allPlayer[currentPlayer-1].x - 1;
-        } } }
-        
-        if(gb.buttons.pressed(BTN_B) && jumpStatus==0 && power==0){jumpStatus=6;}
-        if(gb.buttons.pressed(BTN_C))     {gamestatus="selectMap";}
-      }
-    }
-  }
-  
-  if(gamestatus=="pause"){
-    if(gb.buttons.pressed(BTN_A)){gamestatus="loading";}
-  }
-  
-  if(gamestatus=="missed"){
-    if(gb.buttons.pressed(BTN_A)){
-      fnctn_nextPlayer();
-      gamestatus="loading";
-    }
-  }
-  
-  
-  if(gamestatus=="gameover"){
-    if(gb.buttons.pressed(BTN_A)){
-      nbAlivePlayerTeam0=3;
-      nbAlivePlayerTeam1=3;
-      gamestatus="selectMap";
-    }
-  } 
+  switch(gamestatus)
+  {
+     case SELECT_MAP :
+          if(gb.buttons.pressed(BTN_DOWN)  && gamelevel+3<=nbAvailableLevel){gamelevel = gamelevel + 3;}
+          if(gb.buttons.pressed(BTN_UP)    && gamelevel-3>=1)               {gamelevel = gamelevel - 3;}
+          if(gb.buttons.pressed(BTN_RIGHT) && gamelevel+1<=nbAvailableLevel){gamelevel = gamelevel + 1;}
+          if(gb.buttons.pressed(BTN_LEFT)  && gamelevel-1>=1)               {gamelevel = gamelevel - 1;}
+          if(gb.buttons.pressed(BTN_A))                                     {gamestatus=NEW_LEVEL;}
+          break;
+               
+     case LOADING :
+          if(gb.buttons.released(BTN_A)){gamestatus=RUNNING;}
+          break;
+          
+     case PAUSE :
+          if(gb.buttons.pressed(BTN_A)){gamestatus=LOADING;}
+          break;
+           
+     case GAMEOVER :
+          if(gb.buttons.pressed(BTN_A)){
+            nbAlivePlayerTeam0=3;
+            nbAlivePlayerTeam1=3;
+            gamestatus=SELECT_MAP;
+          }
+          break;
+     
+     case RUNNING :
+          if(gb.buttons.repeat(BTN_A,1) && power<10){
+            power = power+1;
+          }else{
+            if(power>0 ){
+              gamestatus=ANIMFIRE;
+              float dir;
+              if(allPlayer[currentPlayer-1].dir==1){
+                dir = 1;
+                projPositionX = (allPlayer[currentPlayer-1].x+4);
+              }else{
+                dir = -1;
+                projPositionX = (allPlayer[currentPlayer-1].x-1);      
+              }
+              projPositionY = allPlayer[currentPlayer-1].y-1;
+              projTrajX = (((trajParamX[angle-1])/5)*(power/3))*dir;
+              projTrajY = ((trajParamY[angle-1])/5)*(power/3);
+            }else{
+              if(gb.buttons.repeat(BTN_UP,1))   {if(angle>1) {angle = angle-1;}}
+              if(gb.buttons.repeat(BTN_DOWN,1)) {if(angle<15){angle = angle+1;}}
+              
+              if(gb.buttons.pressed(BTN_RIGHT)){
+                allPlayer[currentPlayer-1].dir = 1;
+              }else{
+                if(gb.buttons.repeat(BTN_RIGHT,1)){
+                  if(gb.display.getPixel(allPlayer[currentPlayer-1].x+4,allPlayer[currentPlayer-1].y+3)==0){
+                    allPlayer[currentPlayer-1].x = allPlayer[currentPlayer-1].x + 1;
+              } } }
+              
+              if(gb.buttons.pressed(BTN_LEFT)){
+                allPlayer[currentPlayer-1].dir = 0;
+              }else{
+                if(gb.buttons.repeat(BTN_LEFT,1)){
+                  if(gb.display.getPixel(allPlayer[currentPlayer-1].x-1,allPlayer[currentPlayer-1].y+3)==0){
+                    allPlayer[currentPlayer-1].x = allPlayer[currentPlayer-1].x - 1;
+              } } }
+              
+              if(gb.buttons.pressed(BTN_B)){
+                if(jumpStatus==0 && power==0 && gb.display.getPixel(allPlayer[currentPlayer-1].x,allPlayer[currentPlayer-1].y-3)==0 && gb.display.getPixel(allPlayer[currentPlayer-1].x+3,allPlayer[currentPlayer-1].y-3)==0)
+                { 
+                  outpt_soundfx(5,0);
+                  jumpStatus=6;
+                }
+              }
+              if(gb.buttons.pressed(BTN_C)){gamestatus=SELECT_MAP;}
+            }
+          }
+          break;
+  } // end switch
 }
 
 //##################################################################
@@ -101,7 +94,7 @@ void fnctn_newlevel() {
   gb.display.setColor(0);
   gb.display.fillRect(0,0,21,12);
   gb.display.setColor(1);
-  gamestatus="loading";
+  gamestatus=LOADING;
 }
 
 //##################################################################
@@ -264,9 +257,9 @@ void fn_checkCollision(){
   evalProjPosX = projPositionX;
   
 
-  if(projPositionX>84){gamestatus="boom";}
-  if(projPositionX<0){gamestatus="boom";}
-  if(projPositionY>48){gamestatus="boom";}
+  if(projPositionX>84){gamestatus=BOOM;}
+  if(projPositionX<0){gamestatus=BOOM;}
+  if(projPositionY>48){gamestatus=BOOM;}
     
   evalProjTrajX = projTrajX/30;
   evalProjTrajY = projTrajY/30;
@@ -279,7 +272,7 @@ void fn_checkCollision(){
       projPositionX = evalProjPosX;
       projPositionY = evalProjPosY;
       check=1;
-      gamestatus="boom";
+      gamestatus=BOOM;
       fnctn_checkDead();
     }
     evalProjPosX = evalProjPosX + evalProjTrajX;
@@ -357,7 +350,7 @@ void fnctn_nextPlayer(){
   power = 0;
   angle = 8;
   timer = 0;
-  gamestatus="running";
+  gamestatus=RUNNING;
 }
 
 //##################################################################
@@ -383,8 +376,9 @@ void fnctn_checkDead(){
     
   }
   if(nbAlivePlayerTeam0==0 || nbAlivePlayerTeam1 == 0){
-    outpt_soundfx(2,1);
-    gamestatus="gameover";
+    if (nbAlivePlayerTeam0==0){outpt_soundfx(3,0);} 
+    if (nbAlivePlayerTeam1==0){outpt_soundfx(2,0);} 
+    gamestatus=GAMEOVER;
     currentPlayer = 0;
     previousPlayerTeam0 = 0;
     previousPlayerTeam1 = 1;
@@ -498,7 +492,7 @@ void fnctn_ia(){
         projPositionY = allPlayer[currentPlayer-1].y+trajParamY[angle-1];
         projTrajX = (((trajParamX[angle-1])/5)*(power/3))*dir;
         projTrajY = ((trajParamY[angle-1])/5)*(power/3);
-        gamestatus="animFire";
+        gamestatus=ANIMFIRE;
       }
     }
   }

@@ -58,17 +58,19 @@ void outpt_players() {
 //##################################################################
 //##################################################################
 void outpt_power(){
-  gb.display.setColor(0);
-  gb.display.fillRect(0, 44, 12, 4);
-  gb.display.setColor(1);
-  gb.display.drawPixel(0,44);
-  gb.display.drawPixel(0,47);
-  gb.display.drawPixel(11,44);
-  gb.display.drawPixel(11,47);
-  
-  for(int pwr=1; pwr<power+1; pwr++){
-    gb.display.drawPixel(pwr,45);
-    gb.display.drawPixel(pwr,46);
+  if(power>0){
+    gb.display.setColor(0);
+    gb.display.fillRect(0, 44, 12, 4);
+    gb.display.setColor(1);
+    gb.display.drawPixel(0,44);
+    gb.display.drawPixel(0,47);
+    gb.display.drawPixel(11,44);
+    gb.display.drawPixel(11,47);
+    
+    for(int pwr=1; pwr<power+1; pwr++){
+      gb.display.drawPixel(pwr,45);
+      gb.display.drawPixel(pwr,46);
+    }
   }
 }
 

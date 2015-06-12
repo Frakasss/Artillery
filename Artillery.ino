@@ -32,7 +32,7 @@ Player allPlayer[6];
 CpuMemory cpuMem[12];
 
 //Game
-String gamestatus;
+byte gamestatus; 
 byte nbAvailableLevel;
 byte gamelevel;
 byte screen;
@@ -66,7 +66,7 @@ extern const byte PROGMEM landscapetiles[32][6];
 extern const byte PROGMEM levels[11][38];
 extern const float trajParamX[];
 extern const float trajParamY[];
-extern const int soundfx[5][8];
+extern const int soundfx[6][8];
 
 //----------------------------------------------------------------------------    
 // setup
@@ -82,7 +82,18 @@ void setup(){
 void main_initGame(){
   gb.titleScreen(gamelogo);
   gb.battery.show=false;
-  gamestatus="selectMap";
+  #define SELECT_MAP 1
+  #define NEW_LEVEL 2
+  #define LOADING 3  
+  #define PAUSE 4
+  #define RUNNING 5
+  #define ANIMFIRE 6
+  #define BOOM 7
+  #define MISSED 8
+  #define GAMEOVER 9
+   
+  gamestatus=SELECT_MAP;
+  
   gamelevel=1;
   nbAvailableLevel=11;
   currentPlayer = 0;
@@ -98,90 +109,87 @@ void main_initGame(){
 //----------------------------------------------------------------------------    
 void loop(){
   if(gb.update()){    
-    // select map
-    if (gamestatus=="selectMap") { 
-      fnctn_checkbuttons();
-      outpt_selectMap(); 
-    }
-
-    // create level
-    if (gamestatus=="newLevel") { 
-      screen=gamelevel-1;
-      fnctn_nextPlayer();
-      fnctn_newlevel();
-    }
-    
-    // loading screen (needed to avoid having unexpected action)
-    if(gamestatus=="loading" || gamestatus=="loadingPause"){
-      fnctn_checkbuttons();
-    }
-    
-    // pause / weapon select?
-    if (gamestatus=="pause") {
-      fnctn_checkbuttons();
-      outpt_pause();
-    }
-    
-    // game running
-    if (gamestatus=="running") {
-      outpt_landscape();
-      outpt_players();
-      outpt_power();
+    switch(gamestatus)
+    {
+      case SELECT_MAP :
+           fnctn_checkbuttons();
+           outpt_selectMap(); 
+           break;
+           
+      case NEW_LEVEL :
+           screen=gamelevel-1;
+           fnctn_nextPlayer();
+           fnctn_newlevel();
+           break;
+           
+      case LOADING :
+           fnctn_checkbuttons();
+           break;
+           
+      case PAUSE :
+           fnctn_checkbuttons();
+           outpt_pause();
+           break;
+           
+      case RUNNING :
+           outpt_landscape();
+           outpt_players();
+           outpt_power();
+          
+           if(allPlayer[currentPlayer-1].team==0){
+             fnctn_checkbuttons();}
+           else{
+             fnctn_ia();
+             gb.display.print(cpuMem[currentPlayer/2].target);
+             gb.display.print(allPlayer[cpuMem[currentPlayer/2].target].dead);
+           }      
+          
+           fnctn_checkJump();
+           if(jumpStatus<3){fnctn_checkPlayerPos();}
+           if(allPlayer[currentPlayer-1].dead==1){
+             fnctn_checkDead();
+             fnctn_nextPlayer();
+           }
+          
+           if(power==0 && jumpStatus==0){outpt_cursor();}
+           break;
+           
+      case ANIMFIRE :
+           outpt_soundfx(0,0);
+           outpt_landscape();
+           outpt_players();
+           fn_nextProjPosition();
+           fn_checkCollision();
+           outpt_projectile();
+           break;
+           
+      case BOOM :
+           outpt_soundfx(1,0);
+           outpt_landscape();
+           outpt_players();
+           outpt_power();
+           outpt_boom();
+           fnctn_checkbuttons();
+           if(timer>=7){
+             fnctn_nextPlayer();
+           }
+           break;
+           
+      case MISSED :
+           outpt_landscape();
+           outpt_players();
+           outpt_power();
+           outpt_missed();
+           fnctn_checkbuttons();
+           break;
+           
+      case GAMEOVER :
+           outpt_landscape();
+           outpt_players();
+           outpt_gameOver();
+           fnctn_checkbuttons();
+           break;
       
-      if(allPlayer[currentPlayer-1].team==0){
-        fnctn_checkbuttons();}
-      else{
-        fnctn_ia();
-        gb.display.print(cpuMem[currentPlayer/2].target);
-        gb.display.print(allPlayer[cpuMem[currentPlayer/2].target].dead);
-      }      
-      
-      fnctn_checkJump();
-      if(jumpStatus<3){fnctn_checkPlayerPos();}
-      if(allPlayer[currentPlayer-1].dead==1){
-        fnctn_checkDead();
-        fnctn_nextPlayer();
-      }
-      
-      if(power==0 && jumpStatus==0){outpt_cursor();}
-    }
-    
-    
-    if(gamestatus=="animFire"){
-      outpt_soundfx(0,0);
-      outpt_landscape();
-      outpt_players();
-      fn_nextProjPosition();
-      fn_checkCollision();
-      outpt_projectile();
-    }
-    
-    if(gamestatus=="boom"){
-      outpt_soundfx(1,1);
-      outpt_landscape();
-      outpt_players();
-      outpt_power();
-      outpt_boom();
-      fnctn_checkbuttons();
-      if(timer>=7){
-        fnctn_nextPlayer();
-      }
-    }
-    
-    if(gamestatus=="missed"){
-      outpt_landscape();
-      outpt_players();
-      outpt_power();
-      outpt_missed();
-      fnctn_checkbuttons();
-    }
-    
-    if(gamestatus=="gameover"){
-      outpt_landscape();
-      outpt_players();
-      outpt_gameOver();
-      fnctn_checkbuttons();
-    }
-    
+    } // end of switch
   } // end of update
- } // end of loop
+} // end of loop
