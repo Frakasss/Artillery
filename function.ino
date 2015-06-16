@@ -21,8 +21,8 @@ void fnctn_checkbuttons() {
            
      case GAMEOVER :
           if(gb.buttons.pressed(BTN_A)){
-            nbAlivePlayerTeam0=3;
-            nbAlivePlayerTeam1=3;
+            //nbAlivePlayerTeam0=3;
+            //nbAlivePlayerTeam1=3;
             gamestatus=SELECT_MAP;
           }
           break;
@@ -34,14 +34,14 @@ void fnctn_checkbuttons() {
             if(power>0 ){
               gamestatus=ANIMFIRE;
               float dir;
-              if(allPlayer[currentPlayer-1].dir==1){
+              if(allPlayer[currentPlayer].dir==1){
                 dir = 1;
-                projPositionX = (allPlayer[currentPlayer-1].x+4);
+                projPositionX = (allPlayer[currentPlayer].x+4);
               }else{
                 dir = -1;
-                projPositionX = (allPlayer[currentPlayer-1].x-1);      
+                projPositionX = (allPlayer[currentPlayer].x-1);      
               }
-              projPositionY = allPlayer[currentPlayer-1].y-1;
+              projPositionY = allPlayer[currentPlayer].y-1;
               projTrajX = (((trajParamX[angle-1])/5)*(power/3))*dir;
               projTrajY = ((trajParamY[angle-1])/5)*(power/3);
             }else{
@@ -49,23 +49,23 @@ void fnctn_checkbuttons() {
               if(gb.buttons.repeat(BTN_DOWN,1)) {if(angle<15){angle = angle+1;}}
               
               if(gb.buttons.pressed(BTN_RIGHT)){
-                allPlayer[currentPlayer-1].dir = 1;
+                allPlayer[currentPlayer].dir = 1;
               }else{
                 if(gb.buttons.repeat(BTN_RIGHT,1)){
-                  if(gb.display.getPixel(allPlayer[currentPlayer-1].x+4,allPlayer[currentPlayer-1].y+3)==0){
-                    allPlayer[currentPlayer-1].x = allPlayer[currentPlayer-1].x + 1;
+                  if(gb.display.getPixel(allPlayer[currentPlayer].x+4,allPlayer[currentPlayer].y+3)==0){
+                    allPlayer[currentPlayer].x = allPlayer[currentPlayer].x + 1;
               } } }
               
               if(gb.buttons.pressed(BTN_LEFT)){
-                allPlayer[currentPlayer-1].dir = 0;
+                allPlayer[currentPlayer].dir = 0;
               }else{
                 if(gb.buttons.repeat(BTN_LEFT,1)){
-                  if(gb.display.getPixel(allPlayer[currentPlayer-1].x-1,allPlayer[currentPlayer-1].y+3)==0){
-                    allPlayer[currentPlayer-1].x = allPlayer[currentPlayer-1].x - 1;
+                  if(gb.display.getPixel(allPlayer[currentPlayer].x-1,allPlayer[currentPlayer].y+3)==0){
+                    allPlayer[currentPlayer].x = allPlayer[currentPlayer].x - 1;
               } } }
               
               if(gb.buttons.pressed(BTN_B)){
-                if(jumpStatus==0 && power==0 && gb.display.getPixel(allPlayer[currentPlayer-1].x,allPlayer[currentPlayer-1].y-3)==0 && gb.display.getPixel(allPlayer[currentPlayer-1].x+3,allPlayer[currentPlayer-1].y-3)==0)
+                if(jumpStatus==0 && power==0 && gb.display.getPixel(allPlayer[currentPlayer].x,allPlayer[currentPlayer].y-3)==0 && gb.display.getPixel(allPlayer[currentPlayer].x+3,allPlayer[currentPlayer].y-3)==0)
                 { 
                   outpt_soundfx(5,0);
                   jumpStatus=6;
@@ -78,6 +78,281 @@ void fnctn_checkbuttons() {
   } // end switch
 }
 
+
+
+// ##################################################################################################################################
+// ################## PLAYER RELATED FUNCTIONS ######################################################################################
+// ##################################################################################################################################
+
+
+//##################################################################
+//##### DEFINE PLAYERS POSITION ####################################
+void fnctn_definePlayer(){
+  byte playerX;
+  byte playerY;
+  byte team;
+  byte check;
+  byte tmp1;
+  byte tmp2; 
+  byte randm[21];
+  
+  //create a table containing 'random' number between 1 and 21, and mix them.
+  for(byte rdm=0;rdm<21;rdm++){randm[rdm] = rdm+1;}
+  for(byte rdm=0;rdm<21;rdm++){
+    tmp1 = random(0,20);
+    tmp2 = randm[rdm];
+    randm[rdm] = randm[tmp1];
+    randm[tmp1] = tmp2;
+  }
+  for(byte i=0;i<nbPlayer*nbTeam;i++){
+    //IsDead
+    allPlayer[i].dead = 0;
+    
+    allPlayer[i].life = 4;
+    
+    //Team
+    allPlayer[i].team = i / nbPlayer;
+    
+    //isIA
+    if(allPlayer[i].team==0)
+      {allPlayer[i].isIA = 0;}
+    else
+      {allPlayer[i].isIA = 1;}
+    //for testing
+    allPlayer[i].isIA = 0;
+    
+    //Choose random x player position
+    playerX = randm[i];
+    
+    //Find Y available position
+    //!!DEBUG!!
+    check=0;
+    for(byte Y = 11; Y > 0; Y--){
+      if(gb.display.getPixel(playerX,Y)==0 && check==0){
+        gb.display.drawPixel(playerX,Y);
+        playerY=Y;
+        check=1;
+      }
+    }    
+    
+    allPlayer[i].x = playerX*4;
+    allPlayer[i].y = playerY*4;
+    
+    //initial direction (1:right, -1:left)
+    if(playerX>10){allPlayer[i].dir = -1;}
+    else{allPlayer[i].dir = 1;}
+    
+    //is player falling
+    allPlayer[i].fall=0;
+  }
+}
+
+//##################################################################
+//##################################################################
+void fnctn_checkJump(){
+  if(jumpStatus==6){allPlayer[currentPlayer].y=allPlayer[currentPlayer].y-3;}
+  if(jumpStatus==5){allPlayer[currentPlayer].y=allPlayer[currentPlayer].y-2;}
+  if(jumpStatus==4){allPlayer[currentPlayer].y=allPlayer[currentPlayer].y-1;}
+  
+  if(jumpStatus>0){jumpStatus=jumpStatus-1;}
+}
+
+//##################################################################
+//##################################################################
+void fnctn_nextPlayer(){
+  do{
+    currentTeam = (currentTeam + 1)%nbTeam;
+  }while(teamInfo[currentTeam].nbAlive==0);
+  
+  do{
+    currentPlayer = (currentTeam*nbPlayer)+(teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
+    teamInfo[currentTeam].lastPlayer = (teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
+  }while(allPlayer[currentPlayer].dead==1);
+  //next team (could be a bug if everybody is dead)
+
+  //if(currentTeam==checkTeam){gamestatus = GAMEOVER;}
+  //currentTeam = checkTeam;
+  
+  //next player
+  //currentPlayer = (currentTeam*nbPlayer)+teamInfo[currentTeam].lastPlayer;
+  
+  //power = 0;
+  //angle = 8;
+  //gamestatus = RUNNING; 
+  
+  
+  /*
+
+  boolean checkEndGame = 0;  
+  boolean checkAliveTeam = 0; 
+  boolean checkDead = 1;
+  byte checkTeam;
+  byte checkPlayer;
+  
+  while(checkAliveTeam==0){
+    if(currentTeam+1 > nbTeam){
+      checkTeam = 0;
+    }else{
+      checkTeam = currentTeam+1;
+    }
+    
+    if(teamInfo[checkTeam].nbAlive>0){
+      checkAliveTeam = 1;
+      if(currentTeam==checkTeam)// only 1 alive Team
+        {checkEndGame=1;}
+      else
+        {currentTeam = checkTeam;}
+      
+      while(checkDead==1){
+        if(teamInfo[checkTeam].lastPlayer+1 > nbPlayer){
+          checkPlayer = 0;
+        }else{
+          checkPlayer = teamInfo[checkTeam].lastPlayer+1;
+        }
+        if(allPlayer[currentTeam*nbPlayer+checkPlayer].dead==0){
+          teamInfo[checkTeam].lastPlayer = checkPlayer;
+          currentPlayer = currentTeam*nbPlayer+checkPlayer;
+          checkDead = 0;
+        }
+      }
+    }     
+  }
+  
+  power = 0;
+  angle = 8;
+  gamestatus = RUNNING; 
+
+  if(checkEndGame==1){
+    gamestatus = GAMEOVER;
+  }
+  */
+
+}
+
+//##################################################################
+//##################################################################
+void fnctn_checkDead(){
+  //check all players
+  for(byte i=0;i<nbPlayer*nbTeam;i++){
+    //if player is still alive
+    if(allPlayer[i].dead==0){
+      //if player is hitten by bullet
+      if(allPlayer[i].x <= projPositionX && allPlayer[i].x+4 >= projPositionX && allPlayer[i].y <= projPositionY && allPlayer[i].y+4 >= projPositionY ){
+        allPlayer[i].life = allPlayer[i].life-1;
+        if(allPlayer[i].life<=0){
+          teamInfo[allPlayer[i].team].nbAlive = teamInfo[allPlayer[i].team].nbAlive-1;
+          allPlayer[i].dead=1;
+        }
+      } 
+      
+      //if player is out of map
+      if((allPlayer[i].y>48) || (allPlayer[i].x<-3) || (allPlayer[i].x>83)){
+        teamInfo[allPlayer[i].team].nbAlive = teamInfo[allPlayer[i].team].nbAlive-1;
+        allPlayer[i].life=0;
+        allPlayer[i].dead=1;
+      }
+    }    
+  }
+}
+
+//##################################################################
+//##################################################################
+void fnctn_checkPlayerPos(){
+  //check all players
+  for(byte pl=0;pl<nbPlayer*nbTeam;pl++){
+    
+    if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0){
+      byte tmpFall = allPlayer[pl].fall+1;
+      for(byte calcFall=0; calcFall<tmpFall;calcFall++){
+        if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0){
+          if(allPlayer[pl].y>45)
+          {
+            //player is dying. increment team death counter
+            if(allPlayer[pl].dead==0){
+              teamInfo[allPlayer[pl].team].nbAlive = teamInfo[allPlayer[pl].team].nbAlive-1;
+              allPlayer[pl].life=0;
+              allPlayer[pl].dead=1;
+            }
+          }else{
+            allPlayer[pl].y=allPlayer[pl].y+1;
+          }
+        }
+      }
+      allPlayer[pl].fall=allPlayer[pl].fall + 1;
+    }else{
+      allPlayer[pl].fall=0;
+    }
+    if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+3)==1 || gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+3)==1 && allPlayer[pl].dead==0){
+      allPlayer[pl].y=allPlayer[pl].y-1;
+    }
+  }
+}
+
+
+
+
+
+// ##################################################################################################################################
+// ################## BULLET RELATED FUNCTIONS ######################################################################################
+// ##################################################################################################################################
+
+//##################################################################
+//##################################################################
+void fn_nextProjPosition(){
+  projPositionX = projPositionX + projTrajX;
+  projPositionY = projPositionY + projTrajY;
+  projTrajX = projTrajX + 0; //Wind
+  projTrajY = projTrajY + (0.23); //Gravity
+}
+
+//##################################################################
+//##################################################################
+void fn_checkCollision(){
+  byte check=0;
+  float evalProjPosX = projPositionX; 
+  float evalProjPosY = projPositionY; 
+  float evalProjTrajX;
+  float evalProjTrajY;
+  float dir;
+  
+  if(allPlayer[currentPlayer].dir==1){dir = 1;}
+  else{dir = -1;}
+  
+  evalProjPosX = projPositionX;
+  
+
+  if(projPositionX>84){gamestatus=BOOM;}
+  if(projPositionX<0){gamestatus=BOOM;}
+  if(projPositionY>48){gamestatus=BOOM;}
+    
+  evalProjTrajX = projTrajX/30;
+  evalProjTrajY = projTrajY/30;
+  
+  
+  while(check==0){
+    if(evalProjPosX>projPositionX+projTrajX){check=1;}
+    if(evalProjPosY>projPositionY+projTrajY){check=1;}
+    if(gb.display.getPixel(evalProjPosX,evalProjPosY)==1){
+      projPositionX = evalProjPosX;
+      projPositionY = evalProjPosY;
+      check=1;
+      gamestatus=BOOM;
+      fnctn_checkDead();
+    }
+    evalProjPosX = evalProjPosX + evalProjTrajX;
+    evalProjPosY = evalProjPosY + evalProjTrajY;
+
+  }
+}
+
+
+
+// ##################################################################################################################################
+// ################# LANDSCAPE RELATED FUNCTIONS ####################################################################################
+// ##################################################################################################################################
+
+
+
 //##################################################################
 //##################################################################
 void fnctn_newlevel() {
@@ -89,74 +364,13 @@ void fnctn_newlevel() {
 
   fnctn_buildLandscape();
   fnctn_definePlayer();
-  
-    
+      
   gb.display.setColor(0);
   gb.display.fillRect(0,0,21,12);
   gb.display.setColor(1);
   gamestatus=LOADING;
 }
 
-//##################################################################
-//##################################################################
-void fnctn_definePlayer(){
-  int canonX;
-  int canonY;
-  int check;
-  int tmp1;
-  int tmp2; 
-  int randm[21];
-  
-  for(int rdm=0;rdm<21;rdm++){randm[rdm] = rdm+1;}
-  for(int rdm=0;rdm<21;rdm++){
-    tmp1 = random(0,21);
-    tmp2 = randm[rdm];
-    randm[rdm] = randm[tmp1];
-    randm[tmp1] = tmp2;
-  }
-  for(int i=0;i<6;i++){
-    //IsDead
-    allPlayer[i].dead = 0;
-    
-    //Team
-    allPlayer[i].team = 0;
-    if(i!=0){allPlayer[i].team = allPlayer[i-1].team+1;}
-    if(allPlayer[i].team>1){allPlayer[i].team=0;}
-    
-    canonX = randm[i+((random(0,3))*6)];
-       
-    check=0;
-    for(int Y = 11; Y > 0; Y--){
-      if(gb.display.getPixel(canonX,Y)==0 && check==0){
-      gb.display.drawPixel(canonX,Y);
-      canonY=Y;
-      check=1;
-      }
-    }
-    allPlayer[i].x = canonX*4;
-    allPlayer[i].y = canonY*4;
-    allPlayer[i].dir = 1;
-    if(canonX>10){allPlayer[i].dir = -1;}
-    allPlayer[i].fall=0;
-    
-    if(allPlayer[i].team==1){
-      cpuMem[i/2].alien = i;
-      cpuMem[i/2].target = i-1;
-      cpuMem[i/2].power1=5;
-      cpuMem[i/2].angle1=4;
-      cpuMem[i/2].dir1=0;
-      cpuMem[i/2].collx1=-4;
-      cpuMem[i/2].colly1=20;
-      cpuMem[i/2].power2=5;
-      cpuMem[i/2].angle2=4;
-      cpuMem[i/2].dir2=1;
-      cpuMem[i/2].collx2=85;
-      cpuMem[i/2].colly2=20;      
-    }
-    
-    
-  }
-}
 
 //##################################################################
 //##################################################################
@@ -186,7 +400,6 @@ void fnctn_buildLandscape(){
     }
   }
 }
-
 
 //##################################################################
 //##################################################################
@@ -234,56 +447,6 @@ void fnctn_unzip(int x, int y, int L0, int L1, int L2, int L3, int L4, int L5, i
 
 //##################################################################
 //##################################################################
-void fn_nextProjPosition(){
-  projPositionX = projPositionX + projTrajX;
-  projPositionY = projPositionY + projTrajY;
-  projTrajX = projTrajX + 0; //Wind
-  projTrajY = projTrajY + (0.23); //Gravity
-}
-
-//##################################################################
-//##################################################################
-void fn_checkCollision(){
-  byte check=0;
-  float evalProjPosX = projPositionX;
-  float evalProjPosY = projPositionY;
-  float evalProjTrajX;
-  float evalProjTrajY;
-  float dir;
-  
-  if(allPlayer[currentPlayer-1].dir==1){dir = 1;}
-  else{dir = -1;}
-  
-  evalProjPosX = projPositionX;
-  
-
-  if(projPositionX>84){gamestatus=BOOM;}
-  if(projPositionX<0){gamestatus=BOOM;}
-  if(projPositionY>48){gamestatus=BOOM;}
-    
-  evalProjTrajX = projTrajX/30;
-  evalProjTrajY = projTrajY/30;
-  
-  
-  while(check==0){
-    if(evalProjPosX>projPositionX+projTrajX){check=1;}
-    if(evalProjPosY>projPositionY+projTrajY){check=1;}
-    if(gb.display.getPixel(evalProjPosX,evalProjPosY)==1){
-      projPositionX = evalProjPosX;
-      projPositionY = evalProjPosY;
-      check=1;
-      gamestatus=BOOM;
-      fnctn_checkDead();
-    }
-    evalProjPosX = evalProjPosX + evalProjTrajX;
-    evalProjPosY = evalProjPosY + evalProjTrajY;
-
-  }
-}
-
-
-//##################################################################
-//##################################################################
 void fnctn_rebuildMap(){
   int mapx = projPositionX/4;
   int mapy = projPositionY/4;
@@ -324,114 +487,13 @@ void fnctn_rebuildMap(){
   }
 }
 
-//##################################################################
-//##################################################################
-void fnctn_nextPlayer(){
-  byte checkDead=1;
-  byte checkTeam=1;
-  if(currentPlayer-1>=0){checkTeam=allPlayer[currentPlayer-1].team;}
-  
-  if(checkTeam==0){
-    previousPlayerTeam0 = currentPlayer;
-    currentPlayer = previousPlayerTeam1;
-  }else{
-    previousPlayerTeam1 = currentPlayer;
-    currentPlayer = previousPlayerTeam0;
-  }
-  
-  while(checkDead==1){
-    currentPlayer = currentPlayer + 1;
-    if(currentPlayer>6){currentPlayer=1;}
-    
-    if(allPlayer[currentPlayer-1].dead==0 && allPlayer[currentPlayer-1].team!=checkTeam){
-      checkDead=0; 
-    }
-  }  
-  power = 0;
-  angle = 8;
-  timer = 0;
-  gamestatus=RUNNING;
-}
 
-//##################################################################
-//##################################################################
-void fnctn_checkDead(){
-  for(byte i=0;i<6;i++){
-    if(allPlayer[i].x <= projPositionX && allPlayer[i].x+4 >= projPositionX && allPlayer[i].y <= projPositionY && allPlayer[i].y+4 >= projPositionY ){
-      if(allPlayer[i].dead==0){
-        if(allPlayer[i].team==0){nbAlivePlayerTeam0 = nbAlivePlayerTeam0 - 1;}
-        else{nbAlivePlayerTeam1 = nbAlivePlayerTeam1-1;}
-      }
-      allPlayer[i].dead=1;
-    }
-    if((allPlayer[i].y>48) || (allPlayer[i].x<-3) || (allPlayer[i].x>83)){
-      if(allPlayer[i].dead==0){
-        if(allPlayer[i].team==0){nbAlivePlayerTeam0 = nbAlivePlayerTeam0 - 1;}
-        else{nbAlivePlayerTeam1 = nbAlivePlayerTeam1-1;}
-      }
-      allPlayer[i].dead=1;
-    }
-    
-    
-    
-  }
-  if(nbAlivePlayerTeam0==0 || nbAlivePlayerTeam1 == 0){
-    if (nbAlivePlayerTeam0==0){outpt_soundfx(3,0);} 
-    if (nbAlivePlayerTeam1==0){outpt_soundfx(2,0);} 
-    gamestatus=GAMEOVER;
-    currentPlayer = 0;
-    previousPlayerTeam0 = 0;
-    previousPlayerTeam1 = 1;
-    jumpStatus=0;
-  }
-}
-
-//##################################################################
-//##################################################################
-void fnctn_checkPlayerPos(){
-  for(byte pl=0;pl<6;pl++){
-    if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0){
-      byte tmpFall = allPlayer[pl].fall+1;
-      for(byte calcFall=0; calcFall<tmpFall;calcFall++){
-        if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0){
-          if(allPlayer[pl].y>48)
-          {
-            if(allPlayer[pl].dead==0){
-              if(allPlayer[pl].team==0){nbAlivePlayerTeam0 = nbAlivePlayerTeam0 - 1;}
-              else{nbAlivePlayerTeam1 = nbAlivePlayerTeam1-1;}
-            }
-            allPlayer[pl].dead=1;
-          }else{
-            allPlayer[pl].y=allPlayer[pl].y+1;
-          }
-        }
-      }
-      allPlayer[pl].fall=allPlayer[pl].fall + 1;
-    }else{
-      allPlayer[pl].fall=0;
-    }
-    if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+3)==1 || gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+3)==1 && allPlayer[pl].dead==0){
-      allPlayer[pl].y=allPlayer[pl].y-1;
-    }
-  }
-}
-
-
-//##################################################################
-//##################################################################
-void fnctn_checkJump(){
-  if(jumpStatus==6){allPlayer[currentPlayer-1].y=allPlayer[currentPlayer-1].y-3;}
-  if(jumpStatus==5){allPlayer[currentPlayer-1].y=allPlayer[currentPlayer-1].y-2;}
-  if(jumpStatus==4){allPlayer[currentPlayer-1].y=allPlayer[currentPlayer-1].y-1;}
-  
-  if(jumpStatus>0){jumpStatus=jumpStatus-1;}
-}
 
 
 //##################################################################
 //##################################################################
 void fnctn_ia(){
-  
+  /*
   
   
   if(ia_power==0){
@@ -469,7 +531,7 @@ void fnctn_ia(){
       }else{//shoot should be longer than shoot2
       
       }
-    }*/
+    }* /
     ia_power = 5;
     ia_angle = 4;
     timer = 10;
@@ -496,5 +558,6 @@ void fnctn_ia(){
       }
     }
   }
+  */
 }
 

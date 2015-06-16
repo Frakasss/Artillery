@@ -9,43 +9,36 @@ typedef struct {
   byte y;
   boolean dir;
   boolean dead;
-  boolean team;
+  byte team;
   byte fall;
+  boolean isIA;
+  byte life;
 } Player;
 
-typedef struct{
-  byte alien;
-  byte target;
-  byte power1;
-  byte angle1;
-  boolean dir1;
-  byte collx1;
-  byte colly1;
-  byte power2;
-  byte angle2;
-  boolean dir2;
-  byte collx2;
-  byte colly2; 
-} CpuMemory;
 
-Player allPlayer[6];
-CpuMemory cpuMem[12];
+typedef struct{
+  byte nbAlive;
+  byte lastPlayer;
+} Team;
+
+Player allPlayer[15];
+Team teamInfo[15];
 
 //Game
 byte gamestatus; 
 byte nbAvailableLevel;
+byte nbAliveTeam;
 byte gamelevel;
 byte screen;
 byte landscapeZip[21][12];
 byte landscape[21][12];
 
 //player
+byte currentTeam;
 byte currentPlayer;
 byte jumpStatus;
-byte previousPlayerTeam0;
-byte previousPlayerTeam1;
-byte nbAlivePlayerTeam0;
-byte nbAlivePlayerTeam1;
+byte nbPlayer;
+byte nbTeam;
 
 //projectile
 float projPositionX;
@@ -53,16 +46,14 @@ float projPositionY;
 float projTrajX;
 float projTrajY;
 float power;
-byte ia_power;
 byte angle;
-byte ia_angle;
 byte timer;
 
 //----------------------------------------------------------------------------    
 // define images & sounds
 //----------------------------------------------------------------------------    
 extern const byte PROGMEM gamelogo[];
-extern const byte PROGMEM landscapetiles[32][6];
+extern const byte PROGMEM landscapetiles[34][6];
 extern const byte PROGMEM levels[11][38];
 extern const float trajParamX[];
 extern const float trajParamY[];
@@ -89,19 +80,21 @@ void main_initGame(){
   #define RUNNING 5
   #define ANIMFIRE 6
   #define BOOM 7
-  #define MISSED 8
-  #define GAMEOVER 9
+  #define GAMEOVER 8
    
   gamestatus=SELECT_MAP;
   
   gamelevel=1;
   nbAvailableLevel=11;
-  currentPlayer = 0;
-  previousPlayerTeam0 = 0;
-  previousPlayerTeam1 = 1;
-  nbAlivePlayerTeam0=3;
-  nbAlivePlayerTeam1=3;
   jumpStatus=0;
+  
+  nbPlayer = 3;
+  nbTeam = 2; 
+  
+  for(byte tim = 0; tim < nbTeam; tim++){
+    teamInfo[tim].nbAlive = nbPlayer;
+    teamInfo[tim].lastPlayer = 0;
+  }
 }
 
 //----------------------------------------------------------------------------    
@@ -118,8 +111,13 @@ void loop(){
            
       case NEW_LEVEL :
            screen=gamelevel-1;
-           fnctn_nextPlayer();
            fnctn_newlevel();
+           nbAliveTeam = nbTeam;
+           power = 0;
+           angle = 8;
+           timer = 0;
+           currentTeam=0;
+           currentPlayer=0;
            break;
            
       case LOADING :
@@ -135,20 +133,22 @@ void loop(){
            outpt_landscape();
            outpt_players();
            outpt_power();
-          
-           if(allPlayer[currentPlayer-1].team==0){
+           gb.display.print(currentTeam);
+           gb.display.print("-");
+           gb.display.print(currentPlayer);
+           if(allPlayer[currentPlayer].isIA==0){
              fnctn_checkbuttons();}
            else{
-             fnctn_ia();
-             gb.display.print(cpuMem[currentPlayer/2].target);
-             gb.display.print(allPlayer[cpuMem[currentPlayer/2].target].dead);
+             //fnctn_ia();
+             //gb.display.print(cpuMem[currentPlayer/2].target);
+             //gb.display.print(allPlayer[cpuMem[currentPlayer/2].target].dead);
            }      
           
            fnctn_checkJump();
            if(jumpStatus<3){fnctn_checkPlayerPos();}
-           if(allPlayer[currentPlayer-1].dead==1){
-             fnctn_checkDead();
-             fnctn_nextPlayer();
+           
+           if(allPlayer[currentPlayer].dead==1){
+             //fnctn_nextPlayer();
            }
           
            if(power==0 && jumpStatus==0){outpt_cursor();}
@@ -167,19 +167,20 @@ void loop(){
            outpt_soundfx(1,0);
            outpt_landscape();
            outpt_players();
-           outpt_power();
+           timer = timer + 1; 
            outpt_boom();
-           fnctn_checkbuttons();
-           if(timer>=7){
-             fnctn_nextPlayer();
+           switch(timer){
+             case  4:
+                   fnctn_rebuildMap();
+                   break;
+             case  7:
+                   timer = 0;
+                   fnctn_nextPlayer();
+                   power = 0;
+                   angle = 8;
+                   gamestatus = RUNNING;
+                   break;
            }
-           break;
-           
-      case MISSED :
-           outpt_landscape();
-           outpt_players();
-           outpt_power();
-           outpt_missed();
            fnctn_checkbuttons();
            break;
            
