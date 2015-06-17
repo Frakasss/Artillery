@@ -21,6 +21,13 @@ void outpt_selectMap(){
   gb.display.print(gamelevel);
 }
 
+
+//##################################################################
+//##################################################################
+void outpt_loading(){
+  gb.display.print("Loading Map...");
+}
+
 //##################################################################
 //##################################################################
 void outpt_landscape() {
@@ -80,6 +87,25 @@ void outpt_power(){
     }
   }
 }
+
+//################################################################## 
+//##################################################################
+void outpt_life(){
+  for(byte i=0;i<nbPlayer*nbTeam;i++){
+    if(allPlayer[i].dead==0){
+      gb.display.setColor(BLACK);
+      switch(allPlayer[i].life){
+        case 3:
+             gb.display.drawFastHLine(allPlayer[i].x,allPlayer[i].y-3,4); 
+             break; 
+        case 2:
+             gb.display.drawFastHLine(allPlayer[i].x,allPlayer[i].y-3,2); 
+             break; 
+      }
+    }
+  }
+}
+
 
 //################################################################## 
 //##################################################################

@@ -115,13 +115,14 @@ void loop(){
            nbAliveTeam = nbTeam;
            power = 0;
            angle = 8;
-           timer = 0;
+           timer = 10;
            currentTeam=0;
            currentPlayer=0;
            break;
            
       case LOADING :
-           fnctn_checkbuttons();
+           outpt_loading();
+           fnctnt_loading();
            break;
            
       case PAUSE :
@@ -132,23 +133,22 @@ void loop(){
       case RUNNING :
            outpt_landscape();
            outpt_players();
+           
            outpt_power();
-           gb.display.print(currentTeam);
-           gb.display.print("-");
-           gb.display.print(currentPlayer);
+           gb.display.print("P");
+           gb.display.print(currentTeam+1);
            if(allPlayer[currentPlayer].isIA==0){
              fnctn_checkbuttons();}
            else{
              //fnctn_ia();
-             //gb.display.print(cpuMem[currentPlayer/2].target);
-             //gb.display.print(allPlayer[cpuMem[currentPlayer/2].target].dead);
            }      
-          
+           
            fnctn_checkJump();
            if(jumpStatus<3){fnctn_checkPlayerPos();}
+           outpt_life();
            
            if(allPlayer[currentPlayer].dead==1){
-             //fnctn_nextPlayer();
+             fnctn_nextPlayer();
            }
           
            if(power==0 && jumpStatus==0){outpt_cursor();}
@@ -176,9 +176,6 @@ void loop(){
              case  7:
                    timer = 0;
                    fnctn_nextPlayer();
-                   power = 0;
-                   angle = 8;
-                   gamestatus = RUNNING;
                    break;
            }
            fnctn_checkbuttons();

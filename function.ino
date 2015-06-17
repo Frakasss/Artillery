@@ -12,7 +12,7 @@ void fnctn_checkbuttons() {
           break;
                
      case LOADING :
-          if(gb.buttons.released(BTN_A)){gamestatus=RUNNING;}
+          //if(gb.buttons.released(BTN_A)){gamestatus=RUNNING;}
           break;
           
      case PAUSE :
@@ -97,9 +97,9 @@ void fnctn_definePlayer(){
   byte randm[21];
   
   //create a table containing 'random' number between 1 and 21, and mix them.
-  for(byte rdm=0;rdm<21;rdm++){randm[rdm] = rdm+1;}
+  for(byte rdm=0;rdm<21;rdm++){randm[rdm] = rdm;}
   for(byte rdm=0;rdm<21;rdm++){
-    tmp1 = random(0,20);
+    tmp1 = random(0,21);
     tmp2 = randm[rdm];
     randm[rdm] = randm[tmp1];
     randm[tmp1] = tmp2;
@@ -108,7 +108,7 @@ void fnctn_definePlayer(){
     //IsDead
     allPlayer[i].dead = 0;
     
-    allPlayer[i].life = 4;
+    allPlayer[i].life = 3;
     
     //Team
     allPlayer[i].team = i / nbPlayer;
@@ -160,72 +160,21 @@ void fnctn_checkJump(){
 //##################################################################
 //##################################################################
 void fnctn_nextPlayer(){
+  byte tmpcrntTeam = currentTeam;
   do{
     currentTeam = (currentTeam + 1)%nbTeam;
   }while(teamInfo[currentTeam].nbAlive==0);
   
-  do{
-    currentPlayer = (currentTeam*nbPlayer)+(teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
-    teamInfo[currentTeam].lastPlayer = (teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
-  }while(allPlayer[currentPlayer].dead==1);
-  //next team (could be a bug if everybody is dead)
-
-  //if(currentTeam==checkTeam){gamestatus = GAMEOVER;}
-  //currentTeam = checkTeam;
-  
-  //next player
-  //currentPlayer = (currentTeam*nbPlayer)+teamInfo[currentTeam].lastPlayer;
-  
-  //power = 0;
-  //angle = 8;
-  //gamestatus = RUNNING; 
-  
-  
-  /*
-
-  boolean checkEndGame = 0;  
-  boolean checkAliveTeam = 0; 
-  boolean checkDead = 1;
-  byte checkTeam;
-  byte checkPlayer;
-  
-  while(checkAliveTeam==0){
-    if(currentTeam+1 > nbTeam){
-      checkTeam = 0;
-    }else{
-      checkTeam = currentTeam+1;
-    }
-    
-    if(teamInfo[checkTeam].nbAlive>0){
-      checkAliveTeam = 1;
-      if(currentTeam==checkTeam)// only 1 alive Team
-        {checkEndGame=1;}
-      else
-        {currentTeam = checkTeam;}
-      
-      while(checkDead==1){
-        if(teamInfo[checkTeam].lastPlayer+1 > nbPlayer){
-          checkPlayer = 0;
-        }else{
-          checkPlayer = teamInfo[checkTeam].lastPlayer+1;
-        }
-        if(allPlayer[currentTeam*nbPlayer+checkPlayer].dead==0){
-          teamInfo[checkTeam].lastPlayer = checkPlayer;
-          currentPlayer = currentTeam*nbPlayer+checkPlayer;
-          checkDead = 0;
-        }
-      }
-    }     
+  if(tmpcrntTeam==currentTeam){gamestatus = GAMEOVER;}
+  else{
+    do{
+      currentPlayer = (currentTeam*nbPlayer)+(teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
+      teamInfo[currentTeam].lastPlayer = (teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
+    }while(allPlayer[currentPlayer].dead==1);
+    power = 0;
+    angle = 8;
+    gamestatus = RUNNING;
   }
-  
-  power = 0;
-  angle = 8;
-  gamestatus = RUNNING; 
-
-  if(checkEndGame==1){
-    gamestatus = GAMEOVER;
-  }
-  */
 
 }
 
@@ -265,7 +214,7 @@ void fnctn_checkPlayerPos(){
       byte tmpFall = allPlayer[pl].fall+1;
       for(byte calcFall=0; calcFall<tmpFall;calcFall++){
         if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0){
-          if(allPlayer[pl].y>45)
+          if(allPlayer[pl].y>48)
           {
             //player is dying. increment team death counter
             if(allPlayer[pl].dead==0){
@@ -351,7 +300,12 @@ void fn_checkCollision(){
 // ################# LANDSCAPE RELATED FUNCTIONS ####################################################################################
 // ##################################################################################################################################
 
-
+//##################################################################
+//##################################################################
+void fnctnt_loading(){
+  timer = timer - 1;
+  if(timer == 0){gamestatus=RUNNING;}
+}
 
 //##################################################################
 //##################################################################
