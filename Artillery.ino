@@ -21,8 +21,8 @@ typedef struct{
   byte lastPlayer;
 } Team;
 
-Player allPlayer[15];
-Team teamInfo[15];
+Player allPlayer[16];
+Team teamInfo[4];
 
 //Game
 byte gamestatus; 
@@ -32,7 +32,7 @@ byte gamelevel;
 byte screen;
 byte landscapeZip[21][12];
 byte landscape[21][12];
-
+byte setting;
 //player
 byte currentTeam;
 byte currentPlayer;
@@ -55,6 +55,7 @@ byte timer;
 extern const byte PROGMEM gamelogo[];
 extern const byte PROGMEM landscapetiles[34][6];
 extern const byte PROGMEM levels[11][38];
+extern const byte PROGMEM options[];
 extern const float trajParamX[];
 extern const float trajParamY[];
 extern const int soundfx[6][8];
@@ -81,20 +82,16 @@ void main_initGame(){
   #define ANIMFIRE 6
   #define BOOM 7
   #define GAMEOVER 8
+  #define OPTIONS 9
    
   gamestatus=SELECT_MAP;
   
-  gamelevel=1;
+  gamelevel=0;
   nbAvailableLevel=11;
-  jumpStatus=0;
-  
-  nbPlayer = 3;
+  setting=0;
+
   nbTeam = 2; 
-  
-  for(byte tim = 0; tim < nbTeam; tim++){
-    teamInfo[tim].nbAlive = nbPlayer;
-    teamInfo[tim].lastPlayer = 0;
-  }
+  nbPlayer = 3;
 }
 
 //----------------------------------------------------------------------------    
@@ -109,6 +106,11 @@ void loop(){
            outpt_selectMap(); 
            break;
            
+      case OPTIONS :
+           outpt_options();
+           fnctn_checkbuttons();
+           break;
+           
       case NEW_LEVEL :
            screen=gamelevel-1;
            fnctn_newlevel();
@@ -116,8 +118,13 @@ void loop(){
            power = 0;
            angle = 8;
            timer = 10;
+           jumpStatus=0;
            currentTeam=0;
            currentPlayer=0;
+           for(byte tim = 0; tim < nbTeam; tim++){
+             teamInfo[tim].nbAlive = nbPlayer;
+             teamInfo[tim].lastPlayer = 0;
+           }
            break;
            
       case LOADING :
@@ -126,17 +133,15 @@ void loop(){
            break;
            
       case PAUSE :
-           fnctn_checkbuttons();
            outpt_pause();
+           fnctn_checkbuttons();
            break;
            
       case RUNNING :
            outpt_landscape();
            outpt_players();
-           
            outpt_power();
-           gb.display.print("P");
-           gb.display.print(currentTeam+1);
+           outpt_team();
            if(allPlayer[currentPlayer].isIA==0){
              fnctn_checkbuttons();}
            else{
@@ -144,13 +149,14 @@ void loop(){
            }      
            
            fnctn_checkJump();
-           if(jumpStatus<3){fnctn_checkPlayerPos();}
-           outpt_life();
-           
-           if(allPlayer[currentPlayer].dead==1){
-             fnctn_nextPlayer();
+           if(jumpStatus<3){
+             fnctn_checkPlayerPos();
+             if(allPlayer[currentPlayer].dead==1){
+               fnctn_nextPlayer();
+               check_gameOver();
+             }
            }
-          
+           outpt_life();
            if(power==0 && jumpStatus==0){outpt_cursor();}
            break;
            
@@ -188,6 +194,6 @@ void loop(){
            fnctn_checkbuttons();
            break;
       
-    } // end of switch
-  } // end of update
-} // end of loop
+    } // end switch
+  } // end update
+} // end loop

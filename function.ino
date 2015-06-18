@@ -5,24 +5,60 @@ void fnctn_checkbuttons() {
   {
      case SELECT_MAP :
           if(gb.buttons.pressed(BTN_DOWN)  && gamelevel+3<=nbAvailableLevel){gamelevel = gamelevel + 3;}
-          if(gb.buttons.pressed(BTN_UP)    && gamelevel-3>=1)               {gamelevel = gamelevel - 3;}
+          if(gb.buttons.pressed(BTN_UP)    && gamelevel-3>=0)               {gamelevel = gamelevel - 3;}
           if(gb.buttons.pressed(BTN_RIGHT) && gamelevel+1<=nbAvailableLevel){gamelevel = gamelevel + 1;}
-          if(gb.buttons.pressed(BTN_LEFT)  && gamelevel-1>=1)               {gamelevel = gamelevel - 1;}
-          if(gb.buttons.pressed(BTN_A))                                     {gamestatus=NEW_LEVEL;}
+          if(gb.buttons.pressed(BTN_LEFT)  && gamelevel-1>=0)               {gamelevel = gamelevel - 1;}
+          if(gb.buttons.pressed(BTN_A)){
+            if(gamelevel==0){
+              gamestatus=OPTIONS;
+              setting=0;
+            }else{
+              gamestatus=NEW_LEVEL;
+            }
+          }
+          break;
+     
+     case OPTIONS :
+          if(gb.buttons.pressed(BTN_DOWN) && setting<2){setting=setting+1;}
+          if(gb.buttons.pressed(BTN_UP) && setting>0){setting=setting-1;}
+          if(gb.buttons.pressed(BTN_RIGHT)){
+            if(setting==0 && nbTeam<4){nbTeam=nbTeam+1;}
+            if(setting==1 && nbPlayer<4){nbPlayer=nbPlayer+1;}
+          }
+          if(gb.buttons.pressed(BTN_LEFT)){
+            if(setting==0 && nbTeam>2){nbTeam=nbTeam-1;}
+            if(setting==1 && nbPlayer>1){nbPlayer=nbPlayer-1;}
+          }
+          if(gb.buttons.pressed(BTN_A) && setting==2){gamestatus=SELECT_MAP;}
           break;
                
      case LOADING :
-          //if(gb.buttons.released(BTN_A)){gamestatus=RUNNING;}
+          //no button to check: timer
           break;
           
      case PAUSE :
-          if(gb.buttons.pressed(BTN_A)){gamestatus=LOADING;}
+          if(gb.buttons.pressed(BTN_DOWN) && setting<2){setting=setting+1;}
+          if(gb.buttons.pressed(BTN_UP) && setting>0){setting=setting-1;}
+          if(gb.buttons.pressed(BTN_A)){
+            switch(setting){
+              case 0:
+                   gamestatus=RUNNING;
+                   break;
+                   
+              case 1:
+                   gamestatus=SELECT_MAP;
+                   break;
+                   
+              case 2:
+                   gb.begin();
+                   break;
+            } 
+          }
           break;
            
      case GAMEOVER :
           if(gb.buttons.pressed(BTN_A)){
-            //nbAlivePlayerTeam0=3;
-            //nbAlivePlayerTeam1=3;
+            
             gamestatus=SELECT_MAP;
           }
           break;
@@ -71,7 +107,10 @@ void fnctn_checkbuttons() {
                   jumpStatus=6;
                 }
               }
-              if(gb.buttons.pressed(BTN_C)){gamestatus=SELECT_MAP;}
+              if(gb.buttons.pressed(BTN_C)){
+                setting=0;
+                gamestatus=PAUSE;
+              }
             }
           }
           break;
@@ -88,8 +127,7 @@ void fnctn_checkbuttons() {
 //##################################################################
 //##### DEFINE PLAYERS POSITION ####################################
 void fnctn_definePlayer(){
-  byte playerX;
-  byte playerY;
+  byte tmpY;
   byte team;
   byte check;
   byte tmp1;
@@ -105,45 +143,56 @@ void fnctn_definePlayer(){
     randm[tmp1] = tmp2;
   }
   for(byte i=0;i<nbPlayer*nbTeam;i++){
-    //IsDead
     allPlayer[i].dead = 0;
-    
     allPlayer[i].life = 3;
-    
-    //Team
     allPlayer[i].team = i / nbPlayer;
+    allPlayer[i].fall=0;
+    allPlayer[i].isIA = 0; //All player are human
+ 
     
-    //isIA
-    if(allPlayer[i].team==0)
-      {allPlayer[i].isIA = 0;}
-    else
-      {allPlayer[i].isIA = 1;}
-    //for testing
-    allPlayer[i].isIA = 0;
-    
-    //Choose random x player position
-    playerX = randm[i];
+    //Define position
+    allPlayer[i].x = randm[i]*4;
     
     //Find Y available position
-    //!!DEBUG!!
     check=0;
-    for(byte Y = 11; Y > 0; Y--){
-      if(gb.display.getPixel(playerX,Y)==0 && check==0){
-        gb.display.drawPixel(playerX,Y);
-        playerY=Y;
-        check=1;
-      }
-    }    
-    
-    allPlayer[i].x = playerX*4;
-    allPlayer[i].y = playerY*4;
+    switch(randm[i]%2){
+      case 1:
+           for(byte Y=11; Y>0; Y--){
+             if(gb.display.getPixel(randm[i],Y)==0 && check==0){
+               gb.display.drawPixel(randm[i],Y);
+               allPlayer[i].y=Y*4;
+               check=1;
+             }
+           }
+           if(check==0){
+             landscapeZip[randm[i]][5]=0;
+             allPlayer[i].y=20;
+           }
+           break;
+       
+       case 0:
+            tmpY=0;
+            for(byte Y = 0; Y <11; Y++){
+              if(gb.display.getPixel(randm[i],Y)==0 && check==0){
+                tmpY=Y;
+              }else{
+                if(tmpY!=0 && check==0){
+                  gb.display.drawPixel(randm[i],tmpY);
+                  allPlayer[i].y=tmpY*4;
+                  check=1;
+                }
+              }
+            }
+            if(check==0){
+              landscapeZip[randm[i]][5]=0;
+              allPlayer[i].y=20;
+            }
+            break;
+    }
     
     //initial direction (1:right, -1:left)
-    if(playerX>10){allPlayer[i].dir = -1;}
+    if(randm[i]>10){allPlayer[i].dir = -1;}
     else{allPlayer[i].dir = 1;}
-    
-    //is player falling
-    allPlayer[i].fall=0;
   }
 }
 
@@ -159,68 +208,21 @@ void fnctn_checkJump(){
 
 //##################################################################
 //##################################################################
-void fnctn_nextPlayer(){
-  byte tmpcrntTeam = currentTeam;
-  do{
-    currentTeam = (currentTeam + 1)%nbTeam;
-  }while(teamInfo[currentTeam].nbAlive==0);
-  
-  if(tmpcrntTeam==currentTeam){gamestatus = GAMEOVER;}
-  else{
-    do{
-      currentPlayer = (currentTeam*nbPlayer)+(teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
-      teamInfo[currentTeam].lastPlayer = (teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
-    }while(allPlayer[currentPlayer].dead==1);
-    power = 0;
-    angle = 8;
-    gamestatus = RUNNING;
-  }
-
-}
-
-//##################################################################
-//##################################################################
-void fnctn_checkDead(){
-  //check all players
-  for(byte i=0;i<nbPlayer*nbTeam;i++){
-    //if player is still alive
-    if(allPlayer[i].dead==0){
-      //if player is hitten by bullet
-      if(allPlayer[i].x <= projPositionX && allPlayer[i].x+4 >= projPositionX && allPlayer[i].y <= projPositionY && allPlayer[i].y+4 >= projPositionY ){
-        allPlayer[i].life = allPlayer[i].life-1;
-        if(allPlayer[i].life<=0){
-          teamInfo[allPlayer[i].team].nbAlive = teamInfo[allPlayer[i].team].nbAlive-1;
-          allPlayer[i].dead=1;
-        }
-      } 
-      
-      //if player is out of map
-      if((allPlayer[i].y>48) || (allPlayer[i].x<-3) || (allPlayer[i].x>83)){
-        teamInfo[allPlayer[i].team].nbAlive = teamInfo[allPlayer[i].team].nbAlive-1;
-        allPlayer[i].life=0;
-        allPlayer[i].dead=1;
-      }
-    }    
-  }
-}
-
-//##################################################################
-//##################################################################
 void fnctn_checkPlayerPos(){
   //check all players
   for(byte pl=0;pl<nbPlayer*nbTeam;pl++){
     
     if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0){
-      byte tmpFall = allPlayer[pl].fall+1;
-      for(byte calcFall=0; calcFall<tmpFall;calcFall++){
+      for(byte calcFall=0; calcFall<allPlayer[pl].fall+1;calcFall++){
         if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0){
-          if(allPlayer[pl].y>48)
+          if(allPlayer[pl].y>48 && allPlayer[pl].y<200)
           {
             //player is dying. increment team death counter
             if(allPlayer[pl].dead==0){
               teamInfo[allPlayer[pl].team].nbAlive = teamInfo[allPlayer[pl].team].nbAlive-1;
               allPlayer[pl].life=0;
               allPlayer[pl].dead=1;
+              check_gameOver();
             }
           }else{
             allPlayer[pl].y=allPlayer[pl].y+1;
@@ -237,6 +239,64 @@ void fnctn_checkPlayerPos(){
   }
 }
 
+//##################################################################
+//##################################################################
+void fnctn_nextPlayer(){
+  //byte tmpcrntTeam = currentTeam;
+  do{
+    currentTeam = (currentTeam + 1)%nbTeam;
+  }while(teamInfo[currentTeam].nbAlive==0);
+  
+  //if(tmpcrntTeam==currentTeam){gamestatus = GAMEOVER;}
+  //else{
+    do{
+      currentPlayer = (currentTeam*nbPlayer)+(teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
+      teamInfo[currentTeam].lastPlayer = (teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
+    }while(allPlayer[currentPlayer].dead==1);
+    power = 0;
+    angle = 8;
+    gamestatus = RUNNING;
+  //}
+}
+
+//##################################################################
+//##################################################################
+void fnctn_checkDead(){
+  //check all players
+  for(byte i=0;i<nbPlayer*nbTeam;i++){
+    //if player is still alive
+    if(allPlayer[i].dead==0){
+      //if player is hitten by bullet
+      if(allPlayer[i].x <= projPositionX && allPlayer[i].x+4 >= projPositionX && allPlayer[i].y <= projPositionY && allPlayer[i].y+4 >= projPositionY ){
+        allPlayer[i].life = allPlayer[i].life-1;
+        if(allPlayer[i].life<=0){
+          teamInfo[allPlayer[i].team].nbAlive = teamInfo[allPlayer[i].team].nbAlive-1;
+          allPlayer[i].dead=1;
+          check_gameOver();
+        }
+      } 
+      
+      //if player is out of map
+      if((allPlayer[i].y>48) || (allPlayer[i].x<-3) || (allPlayer[i].x>83)){
+        teamInfo[allPlayer[i].team].nbAlive = teamInfo[allPlayer[i].team].nbAlive-1;
+        allPlayer[i].life=0;
+        allPlayer[i].dead=1;
+        check_gameOver();
+      }
+    }    
+  }
+}
+
+//##################################################################
+//##################################################################
+void check_gameOver(){
+  byte nbAliveTeam = 0;
+  gamestatus=GAMEOVER;
+  for(byte i=0;i<nbTeam;i++){
+    if(teamInfo[i].nbAlive>0){nbAliveTeam=nbAliveTeam+1;}
+  }
+  if(nbAliveTeam>1){gamestatus = RUNNING;}
+}
 
 
 
@@ -311,17 +371,17 @@ void fnctnt_loading(){
 //##################################################################
 void fnctn_newlevel() {
   // create landscape array from level bitmap    
-  gb.display.setColor(0);
+  gb.display.setColor(WHITE);
   gb.display.fillRect(0,0,21,12);
-  gb.display.setColor(1);
+  gb.display.setColor(BLACK);
   gb.display.drawBitmap(0,0,levels[screen]);
 
   fnctn_buildLandscape();
   fnctn_definePlayer();
       
-  gb.display.setColor(0);
+  gb.display.setColor(WHITE);
   gb.display.fillRect(0,0,21,12);
-  gb.display.setColor(1);
+  gb.display.setColor(BLACK);
   gamestatus=LOADING;
 }
 
