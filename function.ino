@@ -16,24 +16,52 @@ void fnctn_checkbuttons() {
               gamestatus=NEW_LEVEL;
             }
           }
+          if(gb.buttons.pressed(BTN_C)){gb.titleScreen(gamelogo);}
           break;
      
      case OPTIONS :
-          if(gb.buttons.pressed(BTN_DOWN) && setting<2){setting=setting+1;}
+          if(gb.buttons.pressed(BTN_DOWN) && setting<5){setting=setting+1;}
           if(gb.buttons.pressed(BTN_UP) && setting>0){setting=setting-1;}
           if(gb.buttons.pressed(BTN_RIGHT)){
-            if(setting==0 && nbTeam<4){nbTeam=nbTeam+1;}
-            if(setting==1 && nbPlayer<4){nbPlayer=nbPlayer+1;}
+            switch(setting){
+              case 0:
+                   if(nbTeam<4){nbTeam=nbTeam+1;}
+                   break;
+              case 1:
+                   if(nbPlayer<4){nbPlayer=nbPlayer+1;}
+                   break;
+              case 2:
+                   if(unitLife<3){unitLife=unitLife+1;}
+                   break;
+              case 3:
+                   if(nbCpuTeam<nbTeam-1){nbCpuTeam=nbCpuTeam+1;}
+                   break;
+              case 4:
+                   if(gravity<3){gravity=gravity+1;}
+                   break;
+            }
           }
           if(gb.buttons.pressed(BTN_LEFT)){
-            if(setting==0 && nbTeam>2){nbTeam=nbTeam-1;}
-            if(setting==1 && nbPlayer>1){nbPlayer=nbPlayer-1;}
+            switch(setting){
+              case 0:
+                   if(nbTeam>2){nbTeam=nbTeam-1;if(nbCpuTeam==nbTeam){nbCpuTeam=nbCpuTeam-1;}}
+                   break;
+              case 1:
+                   if(nbPlayer>1){nbPlayer=nbPlayer-1;}
+                   break;
+              case 2:
+                   if(unitLife>1){unitLife=unitLife-1;}
+                   break;
+              case 3:
+                   if(nbCpuTeam>0){nbCpuTeam=nbCpuTeam-1;}
+                   break;
+              case 4:
+                   if(gravity>1){gravity=gravity-1;}
+                   break;
+            }
           }
-          if(gb.buttons.pressed(BTN_A) && setting==2){gamestatus=SELECT_MAP;}
-          break;
-               
-     case LOADING :
-          //no button to check: timer
+          if(gb.buttons.pressed(BTN_A) && setting==5){gamestatus=SELECT_MAP;}
+          if(gb.buttons.pressed(BTN_C)){gb.titleScreen(gamelogo);}
           break;
           
      case PAUSE :
@@ -48,19 +76,20 @@ void fnctn_checkbuttons() {
               case 1:
                    gamestatus=SELECT_MAP;
                    break;
-                   
-              case 2:
-                   gb.begin();
-                   break;
             } 
           }
+          if(gb.buttons.pressed(BTN_C)){gb.titleScreen(gamelogo);}
           break;
+          
            
      case GAMEOVER :
           if(gb.buttons.pressed(BTN_A)){
-            
             gamestatus=SELECT_MAP;
           }
+          break;
+          
+     case SELECT_UNIT :
+          if(gb.buttons.pressed(BTN_LEFT) || gb.buttons.pressed(BTN_RIGHT) || gb.buttons.pressed(BTN_B)){allPlayer[currentPlayer].timer=0;}
           break;
      
      case RUNNING :
@@ -68,21 +97,15 @@ void fnctn_checkbuttons() {
             power = power+1;
           }else{
             if(power>0 ){
+              //define original position of rocket
+              rocket.x = allPlayer[currentPlayer].x+(1+(allPlayer[currentPlayer].dir))+(((trajParamX[angle]/10)*((allPlayer[currentPlayer].dir*2)-1)));
+              rocket.y = (allPlayer[currentPlayer].y+((trajParamY[angle]/10))+1);
+              rocket.x_traj = trajParamX[angle]/10*(power/2)*((allPlayer[currentPlayer].dir*2)-1);
+              rocket.y_traj = trajParamY[angle]/10*(power/2);
               gamestatus=ANIMFIRE;
-              float dir;
-              if(allPlayer[currentPlayer].dir==1){
-                dir = 1;
-                projPositionX = (allPlayer[currentPlayer].x+4);
-              }else{
-                dir = -1;
-                projPositionX = (allPlayer[currentPlayer].x-1);      
-              }
-              projPositionY = allPlayer[currentPlayer].y-1;
-              projTrajX = (((trajParamX[angle-1])/5)*(power/3))*dir;
-              projTrajY = ((trajParamY[angle-1])/5)*(power/3);
             }else{
-              if(gb.buttons.repeat(BTN_UP,1))   {if(angle>1) {angle = angle-1;}}
-              if(gb.buttons.repeat(BTN_DOWN,1)) {if(angle<15){angle = angle+1;}}
+              if(gb.buttons.repeat(BTN_UP,1)   || gb.buttons.pressed(BTN_UP))     {if(angle>0){angle = angle-1;}}
+              if(gb.buttons.repeat(BTN_DOWN,1) || gb.buttons.pressed(BTN_DOWN))   {if(angle<8){angle = angle+1;}}
               
               if(gb.buttons.pressed(BTN_RIGHT)){
                 allPlayer[currentPlayer].dir = 1;
@@ -101,9 +124,11 @@ void fnctn_checkbuttons() {
               } } }
               
               if(gb.buttons.pressed(BTN_B)){
-                if(jumpStatus==0 && power==0 && gb.display.getPixel(allPlayer[currentPlayer].x,allPlayer[currentPlayer].y-3)==0 && gb.display.getPixel(allPlayer[currentPlayer].x+3,allPlayer[currentPlayer].y-3)==0)
+                if(jumpStatus==0 && power==0 
+                    && gb.display.getPixel(allPlayer[currentPlayer].x,allPlayer[currentPlayer].y-3)==0 
+                    && gb.display.getPixel(allPlayer[currentPlayer].x+3,allPlayer[currentPlayer].y-3)==0)
                 { 
-                  outpt_soundfx(5,0);
+                  outpt_soundfx(5);
                   jumpStatus=6;
                 }
               }
@@ -127,82 +152,110 @@ void fnctn_checkbuttons() {
 //##################################################################
 //##### DEFINE PLAYERS POSITION ####################################
 void fnctn_definePlayer(){
-  byte tmpY;
-  byte team;
-  byte check;
-  byte tmp1;
-  byte tmp2; 
+  boolean check;
+  byte tmp;
+  byte tmp2;
   byte randm[21];
   
-  //create a table containing 'random' number between 1 and 21, and mix them.
-  for(byte rdm=0;rdm<21;rdm++){randm[rdm] = rdm;}
-  for(byte rdm=0;rdm<21;rdm++){
-    tmp1 = random(0,21);
-    tmp2 = randm[rdm];
-    randm[rdm] = randm[tmp1];
-    randm[tmp1] = tmp2;
+  for(fct_countr=0;fct_countr<21;fct_countr++){randm[fct_countr] = (fct_countr*4)%21;}
+
+  tmp = random(0,21);
+  for(fct_countr=0;fct_countr<21-tmp;fct_countr++){
+    tmp2 = randm[fct_countr];
+    randm[fct_countr] = randm[fct_countr+tmp];
+    randm[tmp] = tmp2;
   }
-  for(byte i=0;i<nbPlayer*nbTeam;i++){
-    allPlayer[i].dead = 0;
-    allPlayer[i].life = 3;
-    allPlayer[i].team = i / nbPlayer;
-    allPlayer[i].fall=0;
-    allPlayer[i].isIA = 0; //All player are human
+
+  
+  for(fct_countr=0;fct_countr<nbPlayer*nbTeam;fct_countr++){
+    allPlayer[fct_countr].dead = 0;
+    allPlayer[fct_countr].life = unitLife;
+    allPlayer[fct_countr].team = fct_countr / nbPlayer;
+    allPlayer[fct_countr].fall=0;
+    allPlayer[fct_countr].isIA = 0; 
+    if(allPlayer[fct_countr].team-1>=nbPlayer-nbCpuTeam){
+      allPlayer[fct_countr].isIA=1;
+    }
+    allPlayer[fct_countr].timer = 0;
  
     
     //Define position
-    allPlayer[i].x = randm[i]*4;
-    
-    //Find Y available position
-    check=0;
-    switch(randm[i]%2){
-      case 1:
-           for(byte Y=11; Y>0; Y--){
-             if(gb.display.getPixel(randm[i],Y)==0 && check==0){
-               gb.display.drawPixel(randm[i],Y);
-               allPlayer[i].y=Y*4;
+    allPlayer[fct_countr].x = randm[fct_countr]*4;
+
+    switch(randm[fct_countr]%2){
+      case 0:
+           allPlayer[fct_countr].y = 0;
+           check=0;
+           while(check==0 && allPlayer[fct_countr].y<11){
+             if(gb.display.getPixel(randm[fct_countr]+1,allPlayer[fct_countr].y+1)==0 && gb.display.getPixel(randm[fct_countr]+1,allPlayer[fct_countr].y+1+1)==1){
+               allPlayer[fct_countr].y = allPlayer[fct_countr].y*4;
                check=1;
+             }else{
+               allPlayer[fct_countr].y = allPlayer[fct_countr].y+1;
              }
            }
            if(check==0){
-             landscapeZip[randm[i]][5]=0;
-             allPlayer[i].y=20;
+              allPlayer[fct_countr].y = ((randm[fct_countr])%11)*4;
+              if(gb.display.getPixel(randm[fct_countr]+1,(randm[fct_countr]%11)+1)==0){
+                gb.display.setColor(BLACK);
+                gb.display.drawPixel(randm[fct_countr]+1,((randm[fct_countr]%11)+1)+1);
+              }else{
+                gb.display.setColor(WHITE);
+                gb.display.drawPixel(randm[fct_countr]+1,((randm[fct_countr]%11)+1));
+                gb.display.setColor(BLACK);
+              }
            }
            break;
-       
-       case 0:
-            tmpY=0;
-            for(byte Y = 0; Y <11; Y++){
-              if(gb.display.getPixel(randm[i],Y)==0 && check==0){
-                tmpY=Y;
+      
+      case 1:
+           allPlayer[fct_countr].y = 10;
+           check=0;
+           while(check==0 && allPlayer[fct_countr].y>0){
+             if(gb.display.getPixel(randm[fct_countr]+1,allPlayer[fct_countr].y+1)==0 && gb.display.getPixel(randm[fct_countr]+1,allPlayer[fct_countr].y+1+1)==1){
+               allPlayer[fct_countr].y = allPlayer[fct_countr].y*4;
+               check=1;
+             }else{
+               allPlayer[fct_countr].y = allPlayer[fct_countr].y-1;
+             }
+           }
+           
+           if(check==0){
+
+              allPlayer[fct_countr].y = ((randm[fct_countr])%11)*4;
+              if(gb.display.getPixel(randm[fct_countr]+1,(randm[fct_countr]%11)+1)==0){
+                gb.display.setColor(BLACK);
+                gb.display.drawPixel(randm[fct_countr]+1,((randm[fct_countr]%11)+1)+1);
               }else{
-                if(tmpY!=0 && check==0){
-                  gb.display.drawPixel(randm[i],tmpY);
-                  allPlayer[i].y=tmpY*4;
-                  check=1;
-                }
+                gb.display.setColor(WHITE);
+                gb.display.drawPixel(randm[fct_countr]+1,((randm[fct_countr]%11)+1));
+                gb.display.setColor(BLACK);
               }
-            }
-            if(check==0){
-              landscapeZip[randm[i]][5]=0;
-              allPlayer[i].y=20;
-            }
-            break;
+           }
+           break;
     }
-    
+
     //initial direction (1:right, -1:left)
-    if(randm[i]>10){allPlayer[i].dir = -1;}
-    else{allPlayer[i].dir = 1;}
+    if(allPlayer[fct_countr].x>40){allPlayer[fct_countr].dir = 0;}
+    else{allPlayer[fct_countr].dir = 1;}
   }
 }
 
 //##################################################################
 //##################################################################
 void fnctn_checkJump(){
-  if(jumpStatus==6){allPlayer[currentPlayer].y=allPlayer[currentPlayer].y-3;}
-  if(jumpStatus==5){allPlayer[currentPlayer].y=allPlayer[currentPlayer].y-2;}
-  if(jumpStatus==4){allPlayer[currentPlayer].y=allPlayer[currentPlayer].y-1;}
-  
+  switch(jumpStatus){
+    case 6:
+         allPlayer[currentPlayer].y=allPlayer[currentPlayer].y-3;
+         break;
+         
+    case 5:
+         allPlayer[currentPlayer].y=allPlayer[currentPlayer].y-2;
+         break;
+         
+    case 4:
+         allPlayer[currentPlayer].y=allPlayer[currentPlayer].y-1;
+         break;
+  }
   if(jumpStatus>0){jumpStatus=jumpStatus-1;}
 }
 
@@ -210,31 +263,36 @@ void fnctn_checkJump(){
 //##################################################################
 void fnctn_checkPlayerPos(){
   //check all players
-  for(byte pl=0;pl<nbPlayer*nbTeam;pl++){
+
+  for(fct_countr2=0;fct_countr2<nbPlayer*nbTeam;fct_countr2++){
+    //s'il n'y a rien
     
-    if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0){
-      for(byte calcFall=0; calcFall<allPlayer[pl].fall+1;calcFall++){
-        if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+4)==0 && gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+4)==0){
-          if(allPlayer[pl].y>48 && allPlayer[pl].y<200)
-          {
-            //player is dying. increment team death counter
-            if(allPlayer[pl].dead==0){
-              teamInfo[allPlayer[pl].team].nbAlive = teamInfo[allPlayer[pl].team].nbAlive-1;
-              allPlayer[pl].life=0;
-              allPlayer[pl].dead=1;
-              check_gameOver();
+    if(gb.display.getPixel(allPlayer[fct_countr2].x,allPlayer[fct_countr2].y+4)==0 && gb.display.getPixel(allPlayer[fct_countr2].x+3,allPlayer[fct_countr2].y+4)==0){
+      
+      for(fct_countr3=0; fct_countr3<allPlayer[fct_countr2].fall+1;fct_countr3++){
+        if(gb.display.getPixel(allPlayer[fct_countr2].x,allPlayer[fct_countr2].y+4)==0 && gb.display.getPixel(allPlayer[fct_countr2].x+3,allPlayer[fct_countr2].y+4)==0){
+          if(allPlayer[fct_countr2].y>48 && allPlayer[fct_countr2].y<200){
+            if(allPlayer[fct_countr2].dead==0){
+              teamInfo[allPlayer[fct_countr2].team].nbAlive = teamInfo[allPlayer[fct_countr2].team].nbAlive-1;
+              power = 0;
+              allPlayer[fct_countr2].life=0;
+              allPlayer[fct_countr2].fall=0;
+              allPlayer[fct_countr2].dead=1;
             }
           }else{
-            allPlayer[pl].y=allPlayer[pl].y+1;
+            allPlayer[fct_countr2].y=allPlayer[fct_countr2].y+1;
           }
         }
       }
-      allPlayer[pl].fall=allPlayer[pl].fall + 1;
+      if(allPlayer[fct_countr2].fall<4 && allPlayer[fct_countr2].dead==0){allPlayer[fct_countr2].fall=allPlayer[fct_countr2].fall + 1;}
     }else{
-      allPlayer[pl].fall=0;
+      allPlayer[fct_countr2].fall=0;
     }
-    if(gb.display.getPixel(allPlayer[pl].x+2,allPlayer[pl].y+3)==1 || gb.display.getPixel(allPlayer[pl].x+1,allPlayer[pl].y+3)==1 && allPlayer[pl].dead==0){
-      allPlayer[pl].y=allPlayer[pl].y-1;
+    if(gb.display.getPixel(allPlayer[fct_countr2].x+2,allPlayer[fct_countr2].y+3)==1 
+      || gb.display.getPixel(allPlayer[fct_countr2].x+1,allPlayer[fct_countr2].y+3)==1 
+      && allPlayer[fct_countr2].dead==0){
+      allPlayer[fct_countr2].y=allPlayer[fct_countr2].y-1;
+      allPlayer[fct_countr2].fall = 0;
     }
   }
 }
@@ -242,61 +300,70 @@ void fnctn_checkPlayerPos(){
 //##################################################################
 //##################################################################
 void fnctn_nextPlayer(){
-  //byte tmpcrntTeam = currentTeam;
   do{
     currentTeam = (currentTeam + 1)%nbTeam;
   }while(teamInfo[currentTeam].nbAlive==0);
   
-  //if(tmpcrntTeam==currentTeam){gamestatus = GAMEOVER;}
-  //else{
-    do{
-      currentPlayer = (currentTeam*nbPlayer)+(teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
-      teamInfo[currentTeam].lastPlayer = (teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
-    }while(allPlayer[currentPlayer].dead==1);
-    power = 0;
-    angle = 8;
-    gamestatus = RUNNING;
-  //}
+  do{
+    currentPlayer = (currentTeam*nbPlayer)+(teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
+    teamInfo[currentTeam].lastPlayer = (teamInfo[currentTeam].lastPlayer+1)%nbPlayer;
+  }while(allPlayer[currentPlayer].dead==1);
+  allPlayer[currentPlayer].timer = consttimer;
+  power = 0;
+  angle = 4;
+  ia.angle = 2;
+  ia.power = 10;
+  ia.targetlocked=0;
+  gamestatus = SELECT_UNIT;
+  fnctn_gameOver();
 }
+
+
+//##################################################################
+//##################################################################
+void fnctn_selectUnit(){
+  out_countr3=0;
+  outpt_selectUnit();
+  if(out_countr3==0){gamestatus=RUNNING;}
+}
+
 
 //##################################################################
 //##################################################################
 void fnctn_checkDead(){
-  //check all players
-  for(byte i=0;i<nbPlayer*nbTeam;i++){
+  //only check if killed by rocket
+  for(fct_countr=0;fct_countr<nbPlayer*nbTeam;fct_countr++){
     //if player is still alive
-    if(allPlayer[i].dead==0){
+    if(allPlayer[fct_countr].dead==0){
       //if player is hitten by bullet
-      if(allPlayer[i].x <= projPositionX && allPlayer[i].x+4 >= projPositionX && allPlayer[i].y <= projPositionY && allPlayer[i].y+4 >= projPositionY ){
-        allPlayer[i].life = allPlayer[i].life-1;
-        if(allPlayer[i].life<=0){
-          teamInfo[allPlayer[i].team].nbAlive = teamInfo[allPlayer[i].team].nbAlive-1;
-          allPlayer[i].dead=1;
-          check_gameOver();
+      if(allPlayer[fct_countr].x <= rocket.x && allPlayer[fct_countr].x+4 >= rocket.x && allPlayer[fct_countr].y <= rocket.y && allPlayer[fct_countr].y+4 >= rocket.y ){
+        allPlayer[fct_countr].life = allPlayer[fct_countr].life-1;
+        if(allPlayer[fct_countr].life<=0){
+          power = 0;
+          allPlayer[fct_countr].dead=1;
+          teamInfo[allPlayer[fct_countr].team].nbAlive = teamInfo[allPlayer[fct_countr].team].nbAlive-1;
+        }else{
+          allPlayer[fct_countr].timer = consttimer;
         }
       } 
-      
-      //if player is out of map
-      if((allPlayer[i].y>48) || (allPlayer[i].x<-3) || (allPlayer[i].x>83)){
-        teamInfo[allPlayer[i].team].nbAlive = teamInfo[allPlayer[i].team].nbAlive-1;
-        allPlayer[i].life=0;
-        allPlayer[i].dead=1;
-        check_gameOver();
-      }
     }    
   }
 }
 
 //##################################################################
 //##################################################################
-void check_gameOver(){
+void fnctn_gameOver(){
   byte nbAliveTeam = 0;
-  gamestatus=GAMEOVER;
-  for(byte i=0;i<nbTeam;i++){
-    if(teamInfo[i].nbAlive>0){nbAliveTeam=nbAliveTeam+1;}
+  //gamestatus=GAMEOVER;
+  for(fct_countr=0;fct_countr<nbTeam;fct_countr++){
+    if(teamInfo[fct_countr].nbAlive>0){nbAliveTeam=nbAliveTeam+1;}
   }
-  if(nbAliveTeam>1){gamestatus = RUNNING;}
+  if(nbAliveTeam<=1){
+    gamestatus = GAMEOVER;
+    //gamestatus = DAMAGE;
+  }
 }
+
 
 
 
@@ -308,49 +375,24 @@ void check_gameOver(){
 //##################################################################
 //##################################################################
 void fn_nextProjPosition(){
-  projPositionX = projPositionX + projTrajX;
-  projPositionY = projPositionY + projTrajY;
-  projTrajX = projTrajX + 0; //Wind
-  projTrajY = projTrajY + (0.23); //Gravity
+  rocket.x = rocket.x + (rocket.x_traj/3);
+  rocket.y = rocket.y + (rocket.y_traj/3);
+  rocket.x_traj = rocket.x_traj + 0; //Wind
+  rocket.y_traj = rocket.y_traj + gravity; //Gravity
+  if(abs(rocket.x_traj)>12){rocket.x_traj=12*rocket.x_traj/abs(rocket.x_traj);}
+  if(abs(rocket.y_traj)>12){rocket.y_traj=12*rocket.y_traj/abs(rocket.y_traj);}
 }
 
 //##################################################################
 //##################################################################
 void fn_checkCollision(){
-  byte check=0;
-  float evalProjPosX = projPositionX; 
-  float evalProjPosY = projPositionY; 
-  float evalProjTrajX;
-  float evalProjTrajY;
-  float dir;
-  
-  if(allPlayer[currentPlayer].dir==1){dir = 1;}
-  else{dir = -1;}
-  
-  evalProjPosX = projPositionX;
-  
-
-  if(projPositionX>84){gamestatus=BOOM;}
-  if(projPositionX<0){gamestatus=BOOM;}
-  if(projPositionY>48){gamestatus=BOOM;}
-    
-  evalProjTrajX = projTrajX/30;
-  evalProjTrajY = projTrajY/30;
-  
-  
-  while(check==0){
-    if(evalProjPosX>projPositionX+projTrajX){check=1;}
-    if(evalProjPosY>projPositionY+projTrajY){check=1;}
-    if(gb.display.getPixel(evalProjPosX,evalProjPosY)==1){
-      projPositionX = evalProjPosX;
-      projPositionY = evalProjPosY;
-      check=1;
-      gamestatus=BOOM;
-      fnctn_checkDead();
+  if(rocket.x>84 || rocket.x<0 || (rocket.y>48 && rocket.y<100)){
+    fnctn_nextPlayer();
+  }else{
+    if(landscape[rocket.x/4][rocket.y/4]<60 && rocket.y/4>=0){gamestatus=BOOM;}
+    for(fct_countr=0;fct_countr<nbPlayer*nbTeam;fct_countr++){
+      if(allPlayer[fct_countr].x <= rocket.x && allPlayer[fct_countr].x+4 >= rocket.x && allPlayer[fct_countr].y <= rocket.y && allPlayer[fct_countr].y+4 >= rocket.y ){gamestatus=BOOM;}
     }
-    evalProjPosX = evalProjPosX + evalProjTrajX;
-    evalProjPosY = evalProjPosY + evalProjTrajY;
-
   }
 }
 
@@ -362,144 +404,213 @@ void fn_checkCollision(){
 
 //##################################################################
 //##################################################################
-void fnctnt_loading(){
-  timer = timer - 1;
-  if(timer == 0){gamestatus=RUNNING;}
-}
-
-//##################################################################
-//##################################################################
 void fnctn_newlevel() {
   // create landscape array from level bitmap    
   gb.display.setColor(WHITE);
   gb.display.fillRect(0,0,21,12);
   gb.display.setColor(BLACK);
-  gb.display.drawBitmap(0,0,levels[screen]);
-
-  fnctn_buildLandscape();
+  gb.display.drawRect(0, 0, 23, 14);
+  gb.display.drawBitmap(1,1,levels[screen]);
+ 
   fnctn_definePlayer();
+  fnctn_buildLandscape();
       
   gb.display.setColor(WHITE);
-  gb.display.fillRect(0,0,21,12);
-  gb.display.setColor(BLACK);
-  gamestatus=LOADING;
+  gb.display.fillRect(0,0,23,14);
+  gb.display.setColor(BLACK);  
 }
-
 
 //##################################################################
 //##################################################################
 void fnctn_buildLandscape(){
-  for (int y=0; y<12; y++) {
-    for (int x=0; x<21; x++) {
-      int L0 = gb.display.getPixel(x,y);
-      int L1=1;
-      int L2=1;
-      int L3=1;
-      int L4=1;
-      int L5=1;
-      int L6=1;
-      int L7=1;
-      int L8=1;
-      
-      if (x>0 and y>0)   { L1 = gb.display.getPixel(x-1,y-1); }
-      if (y>0)           { L2 = gb.display.getPixel(x,y-1); }
-      if (x<20 and y>0)  { L3 = gb.display.getPixel(x+1,y-1); }
-      if (x>0)           { L4 = gb.display.getPixel(x-1,y); }
-      if (x<20)          { L5 = gb.display.getPixel(x+1,y); }
-      if (x>0 and y<11)  { L6 = gb.display.getPixel(x-1,y+1); }
-      if (y<11)          { L7 = gb.display.getPixel(x,y+1); }
-      if (x<20 and y<11) { L8 = gb.display.getPixel(x+1,y+1); }
-      
-      fnctn_unzip(x, y, L0, L1, L2, L3, L4, L5, L6, L7, L8);   
+  for (fct_countr=1; fct_countr<13; fct_countr++) {
+    for (fct_countr2=1; fct_countr2<22; fct_countr2++) {
+      if(gb.display.getPixel(fct_countr2,   fct_countr))  {pixelCheck.L0=0;} else {pixelCheck.L0=60;}
+      if(gb.display.getPixel(fct_countr2-1, fct_countr-1)){pixelCheck.L1=0;} else {pixelCheck.L1=60;}
+      if(gb.display.getPixel(fct_countr2,   fct_countr-1)){pixelCheck.L2=0;} else {pixelCheck.L2=60;}
+      if(gb.display.getPixel(fct_countr2+1, fct_countr-1)){pixelCheck.L3=0;} else {pixelCheck.L3=60;}
+      if(gb.display.getPixel(fct_countr2-1, fct_countr))  {pixelCheck.L4=0;} else {pixelCheck.L4=60;}
+      if(gb.display.getPixel(fct_countr2+1, fct_countr))  {pixelCheck.L5=0;} else {pixelCheck.L5=60;}
+      if(gb.display.getPixel(fct_countr2-1, fct_countr+1)){pixelCheck.L6=0;} else {pixelCheck.L6=60;}
+      if(gb.display.getPixel(fct_countr2,   fct_countr+1)){pixelCheck.L7=0;} else {pixelCheck.L7=60;}
+      if(gb.display.getPixel(fct_countr2+1, fct_countr+1)){pixelCheck.L8=0;} else {pixelCheck.L8=60;}
+      fnctn_unzip(fct_countr2-1, fct_countr-1);   
     }
   }
 }
-
-//##################################################################
-//##################################################################
-void fnctn_unzip(int x, int y, int L0, int L1, int L2, int L3, int L4, int L5, int L6, int L7, int L8){
-  int L=0;
-  int Lzip=0;
-  
-  if (L0==1) {
-    L=1;
-    Lzip=1;
-    if(L1==0 && L2==0 && L4==0 && L5==1 && L7==1 && L8==1){L=2;}
-    if(L2==0 && L3==0 && L4==1 && L5==0 && L6==1 && L7==1){L=3;}
-    if(L1==1 && L2==1 && L4==1 && L5==0 && L7==0 && L8==0){L=4;}
-    if(L2==1 && L3==1 && L4==0 && L5==1 && L6==0 && L7==0){L=5;}
-    if(L1==0 && L2==0 && L3==0 && L4==0 && L5==0 && L7==1){L=6;}
-    if(L1==0 && L2==0 && L4==0 && L5==1 && L6==0 && L7==0){L=7;}
-    if(L2==1 && L4==0 && L5==0 && L6==0 && L7==0 && L8==0){L=8;}
-    if(L2==0 && L3==0 && L4==1 && L5==0 && L7==0 && L8==0){L=9;}
-    if(L1==0 && L2==0 && L3==1 && L4==0 && L5==0 && L6==1 && L7==0 && L8==0){L=10;}
-    if(L1==1 && L2==0 && L3==0 && L4==0 && L5==0 && L6==0 && L7==0 && L8==1){L=11;}
-    if(L1==0 && L2==0 && L3==0 && L4==0 && L5==0 && L6==0 && L7==0 && L8==1){L=12;}
-    if(L1==0 && L2==0 && L3==0 && L4==0 && L5==0 && L6==1 && L7==0 && L8==0){L=13;}
-    if(L1==1 && L2==0 && L3==0 && L4==0 && L5==0 && L6==0 && L7==0 && L8==0){L=14;}
-    if(L1==0 && L2==0 && L3==1 && L4==0 && L5==0 && L6==0 && L7==0 && L8==0){L=15;}
-  }else{
-    L=16;
-    if(L2==1 && L4==1 && L5==1 && L7==0){L=21;}
-    if(L2==1 && L4==1 && L5==0 && L7==1){L=22;}
-    if(L2==0 && L4==1 && L5==1 && L7==1){L=23;}
-    if(L2==1 && L4==0 && L5==1 && L7==1){L=24;}        
-    if(L2==1 && L4==1 && L5==0 && L7==0){L=17;}
-    if(L2==1 && L4==0 && L5==1 && L7==0){L=18;}
-    if(L2==0 && L4==0 && L5==1 && L7==1){L=19;}
-    if(L2==0 && L4==1 && L5==0 && L7==1){L=20;}
-    if(L1==1 && L2==1 && L3==0 && L4==1 && L5==1 && L6==0 && L7==1 && L8==1){L=25;}
-    if(L1==0 && L2==1 && L3==1 && L4==1 && L5==1 && L6==1 && L7==1 && L8==0){L=26;}
-    if(L1==1 && L2==1 && L3==1 && L4==1 && L5==1 && L6==1 && L7==1 && L8==0){L=27;}
-    if(L1==1 && L2==1 && L3==1 && L4==1 && L5==1 && L6==0 && L7==1 && L8==1){L=28;}
-    if(L1==0 && L2==1 && L3==1 && L4==1 && L5==1 && L6==1 && L7==1 && L8==1){L=29;}
-    if(L1==1 && L2==1 && L3==0 && L4==1 && L5==1 && L6==1 && L7==1 && L8==1){L=30;}
-  }
-  landscapeZip[x][y]=Lzip;
-  landscape[x][y]=L;
-}
-
 //##################################################################
 //##################################################################
 void fnctn_rebuildMap(){
-  int mapx = projPositionX/4;
-  int mapy = projPositionY/4;
-  landscapeZip[mapx][mapy]=0;
-  
-  for (int y=0; y<12; y++) {
-    for (int x=0; x<21; x++) {
-      int L0 = landscapeZip[x][y];
-      int L1=1;
-      int L2=1;
-      int L3=1;
-      int L4=1;
-      int L5=1;
-      int L6=1;
-      int L7=1;
-      int L8=1;
-      
-      if (x>0 and y>0)   { L1 = landscapeZip[x-1][y-1]; }
-      if (y>0)           { L2 = landscapeZip[x][y-1]; }
-      if (x<20 and y>0)  { L3 = landscapeZip[x+1][y-1]; }
-      if (x>0)           { L4 = landscapeZip[x-1][y]; }
-      if (x<20)          { L5 = landscapeZip[x+1][y]; }
-      if (x>0 and y<11)  { L6 = landscapeZip[x-1][y+1]; }
-      if (y<11)          { L7 = landscapeZip[x][y+1]; }
-      if (x<20 and y<11) { L8 = landscapeZip[x+1][y+1]; }
-      
-      fnctn_unzip(x, y, L0, L1, L2, L3, L4, L5, L6, L7, L8);
-      
-      if(L0==2){
-        landscape[x][y]=31;
-        landscapeZip[x][y]=2;
+
+  if(rocket.x_traj>=0){
+    if(rocket.y_traj>=0){
+      if(landscape[(rocket.x/4)-1][rocket.y/4]<60 && landscape[rocket.x/4][(rocket.y/4)-1]<60){
+        if(abs(rocket.x_traj)>abs(rocket.y_traj)/2){
+          if((rocket.x/4)-1>=0
+              && (rocket.x/4)-1<=21
+              && rocket.y/4>=0
+              && rocket.y/4<=12){
+          landscape[(rocket.x/4)-1][rocket.y/4]=60;}
+        }else{
+          if(rocket.x/4>=0
+              && rocket.x/4<=21
+              && (rocket.y/4)-1>=0
+              && (rocket.y/4)-1<=12){
+          landscape[rocket.x/4][(rocket.y/4)-1]=60;}
+        }
+      }else{
+        if(rocket.x/4>=0
+            && rocket.x/4<=21
+            && rocket.y/4>=0
+            && rocket.y/4<=12){
+        landscape[rocket.x/4][rocket.y/4]=60;}
       }
-      if(L0==3){
-        landscape[x][y]=32;
-        landscapeZip[x][y]=3;
+    }else{
+      if(landscape[(rocket.x/4)-1][rocket.y/4]<60 && landscape[rocket.x/4][(rocket.y/4)+1]<60){
+        if(abs(rocket.x_traj)>abs(rocket.y_traj)/2){
+          if((rocket.x/4)-1>=0
+              && (rocket.x/4)-1<=21
+              && rocket.y/4>=0
+              && rocket.y/4<=12){
+          landscape[(rocket.x/4)-1][rocket.y/4]=60;}
+        }else{
+          if(rocket.x/4>=0
+              && rocket.x/4<=21
+              && (rocket.y/4)+1>=0
+              && (rocket.y/4)+1<=12){
+          landscape[rocket.x/4][(rocket.y/4)+1]=60;}
+        }
+      }else{
+        if(rocket.x/4>=0
+          && rocket.x/4<=21
+          && rocket.y/4>=0
+          && rocket.y/4<=12){
+        landscape[rocket.x/4][rocket.y/4]=60;}
+      }
+    }
+  }else{
+    if(rocket.y_traj>=0){
+      if(landscape[(rocket.x/4)+1][rocket.y/4]<60 && landscape[rocket.x/4][(rocket.y/4)-1]<60){
+        if(abs(rocket.x_traj)>abs(rocket.y_traj)/2){
+          if((rocket.x/4)+1>=0
+            && (rocket.x/4)+1<=21
+            && rocket.y/4>=0
+            && rocket.y/4<=12){
+          landscape[(rocket.x/4)+1][rocket.y/4]=60;}
+        }else{
+          if(rocket.x/4>=0
+            && rocket.x/4<=21
+            && (rocket.y/4)-1>=0
+            && (rocket.y/4)-1<=12){
+          landscape[rocket.x/4][(rocket.y/4)-1]=60;}
+        }
+      }else{
+        if(rocket.x/4>=0
+          && rocket.x/4<=21
+          && rocket.y/4>=0
+          && rocket.y/4<=12){
+        landscape[rocket.x/4][rocket.y/4]=60;}
+      }
+    }else{
+      if(landscape[(rocket.x/4)+1][rocket.y/4]<60 && landscape[rocket.x/4][(rocket.y/4)+1]<60){
+        if(abs(rocket.x_traj)>abs(rocket.y_traj)/2){
+          if((rocket.x/4)+1>=0
+            && (rocket.x/4)+1<=21
+            && rocket.y/4>=0
+            && rocket.y/4<=12){
+          landscape[(rocket.x/4)+1][rocket.y/4]=60;}
+        }else{
+          if(rocket.x/4>=0
+            && rocket.x/4<=21
+            && (rocket.y/4)+1>=0
+            && (rocket.y/4)+1<=12){
+          landscape[rocket.x/4][(rocket.y/4)+1]=60;}
+        }
+      }else{
+        if(rocket.x/4>=0
+          && rocket.x/4<=21
+          && rocket.y/4>=0
+          && rocket.y/4<=12){
+        landscape[rocket.x/4][rocket.y/4]=60;}
       }
     }
   }
+
+  for (fct_countr=0; fct_countr<12; fct_countr++) {
+    for (fct_countr2=0; fct_countr2<21; fct_countr2++) {
+      pixelCheck.L0 = landscape[fct_countr2][fct_countr];
+      if (fct_countr2>0 and fct_countr>0)   { pixelCheck.L1 = landscape[fct_countr2-1][fct_countr-1]; } else { pixelCheck.L1=0; }
+      if (fct_countr>0)                     { pixelCheck.L2 = landscape[fct_countr2][fct_countr-1];   } else { pixelCheck.L2=0; }
+      if (fct_countr2<20 and fct_countr>0)  { pixelCheck.L3 = landscape[fct_countr2+1][fct_countr-1]; } else { pixelCheck.L3=0; }
+      if (fct_countr2>0)                    { pixelCheck.L4 = landscape[fct_countr2-1][fct_countr];   } else { pixelCheck.L4=0; }
+      if (fct_countr2<20)                   { pixelCheck.L5 = landscape[fct_countr2+1][fct_countr];   } else { pixelCheck.L5=0; }
+      if (fct_countr2>0 and fct_countr<11)  { pixelCheck.L6 = landscape[fct_countr2-1][fct_countr+1]; } else { pixelCheck.L6=0; }
+      if (fct_countr<11)                    { pixelCheck.L7 = landscape[fct_countr2][fct_countr+1];   } else { pixelCheck.L7=0; }
+      if (fct_countr2<20 and fct_countr<11) { pixelCheck.L8 = landscape[fct_countr2+1][fct_countr+1]; } else { pixelCheck.L8=0; }
+      
+      fnctn_unzip(fct_countr2, fct_countr);
+    }
+  }
 }
+
+//##################################################################
+//##################################################################
+void fnctn_unzip(byte x, byte y){
+  if (pixelCheck.L0<60) {
+    landscape[x][y]=0;
+    //BLACK
+
+    //1 corner
+    if(pixelCheck.L2>=60 && pixelCheck.L3>=60 && pixelCheck.L5>=60){landscape[x][y]=10;}
+    if(pixelCheck.L4>=60 && pixelCheck.L6>=60 && pixelCheck.L7>=60){landscape[x][y]=11;}
+    if(pixelCheck.L5>=60 && pixelCheck.L7>=60 && pixelCheck.L8>=60){landscape[x][y]=12;}
+    if(pixelCheck.L1>=60 && pixelCheck.L2>=60 && pixelCheck.L4>=60){landscape[x][y]=13;}
+
+    //2 corner
+    if(pixelCheck.L1>=60 && pixelCheck.L2>=60 && pixelCheck.L3>=60 && pixelCheck.L4>=60 && pixelCheck.L5>=60){landscape[x][y]=20;}
+    if(pixelCheck.L4>=60 && pixelCheck.L5>=60 && pixelCheck.L6>=60 && pixelCheck.L7>=60 && pixelCheck.L8>=60){landscape[x][y]=21;}
+    if(pixelCheck.L2>=60 && pixelCheck.L3>=60 && pixelCheck.L5>=60 && pixelCheck.L7>=60 && pixelCheck.L8>=60){landscape[x][y]=22;}
+    if(pixelCheck.L1>=60 && pixelCheck.L2>=60 && pixelCheck.L4>=60 && pixelCheck.L6>=60 && pixelCheck.L7>=60){landscape[x][y]=23;}    
+
+    //3 corner
+    if(pixelCheck.L1>=60 && pixelCheck.L2>=60 && pixelCheck.L3>=60 && pixelCheck.L4>=60 && pixelCheck.L5>=60 && pixelCheck.L6>=60 && pixelCheck.L7>=60){landscape[x][y]=40;}
+    if(pixelCheck.L2>=60 && pixelCheck.L3>=60 && pixelCheck.L4>=60 && pixelCheck.L5>=60 && pixelCheck.L6>=60 && pixelCheck.L7>=60 && pixelCheck.L8>=60){landscape[x][y]=41;}
+    if(pixelCheck.L1>=60 && pixelCheck.L2>=60 && pixelCheck.L3>=60 && pixelCheck.L4>=60 && pixelCheck.L5>=60 && pixelCheck.L7>=60 && pixelCheck.L8>=60){landscape[x][y]=42;}
+    if(pixelCheck.L1>=60 && pixelCheck.L2>=60 && pixelCheck.L4>=60 && pixelCheck.L5>=60 && pixelCheck.L6>=60 && pixelCheck.L7>=60 && pixelCheck.L8>=60){landscape[x][y]=43;}
+
+    //4 corner
+    if(pixelCheck.L1>=60 && pixelCheck.L2>=60 && pixelCheck.L3>=60 && pixelCheck.L4>=60 && pixelCheck.L5>=60 && pixelCheck.L6>=60 && pixelCheck.L7>=60 && pixelCheck.L8>=60){landscape[x][y]=50;}
+    
+  }else{
+    landscape[x][y]=60;
+    //WHITE
+    
+    //1 corner
+    if(pixelCheck.L2<60 && pixelCheck.L5<60){landscape[x][y]=70;}
+    if(pixelCheck.L4<60 && pixelCheck.L7<60){landscape[x][y]=71;}
+    if(pixelCheck.L5<60 && pixelCheck.L7<60){landscape[x][y]=72;}
+    if(pixelCheck.L2<60 && pixelCheck.L4<60){landscape[x][y]=73;}
+
+    //2 corner
+    if(pixelCheck.L2<60 && pixelCheck.L4<60 && pixelCheck.L5<60){landscape[x][y]=80;}
+    if(pixelCheck.L4<60 && pixelCheck.L5<60 && pixelCheck.L7<60){landscape[x][y]=81;}
+    if(pixelCheck.L2<60 && pixelCheck.L5<60 && pixelCheck.L7<60){landscape[x][y]=82;}
+    if(pixelCheck.L2<60 && pixelCheck.L4<60 && pixelCheck.L7<60){landscape[x][y]=83;}    
+
+    //3 corner
+    //if(pixelCheck.L2<60 && pixelCheck.L4<60 && pixelCheck.L5<60 && pixelCheck.L7<60){landscape[x][y]=100;}
+    //if(pixelCheck.L2<60 && pixelCheck.L4<60 && pixelCheck.L5<60 && pixelCheck.L7<60){landscape[x][y]=101;}
+    //if(pixelCheck.L2<60 && pixelCheck.L4<60 && pixelCheck.L5<60 && pixelCheck.L7<60){landscape[x][y]=102;}
+    //if(pixelCheck.L2<60 && pixelCheck.L4<60 && pixelCheck.L5<60 && pixelCheck.L7<60){landscape[x][y]=103;}
+
+    //4 corner
+    if(pixelCheck.L2<60 && pixelCheck.L4<60 && pixelCheck.L5<60 && pixelCheck.L7<60){landscape[x][y]=110;}
+
+  }
+}
+
+
+
 
 
 
@@ -507,71 +618,82 @@ void fnctn_rebuildMap(){
 //##################################################################
 //##################################################################
 void fnctn_ia(){
-  /*
-  
-  
-  if(ia_power==0){
-
-    byte target = cpuMem[currentPlayer/2].target;
-    if(allPlayer[target].dead==1){
-      byte check = 0;
-      byte checkedPlayer = 0;
-      while (check==0){
-        if(allPlayer[checkedPlayer].dead==0 && allPlayer[checkedPlayer].team==0){
-          target=checkedPlayer;
-          cpuMem[currentPlayer/2].target=checkedPlayer;
-          check=0;
-        }else{
-          checkedPlayer=checkedPlayer+1;
-        }
-      }
-    }      
-    /*     
-    if(cpuMem[currentPlayer/2].collx1>allPlayer[target].x){//shoot should be shorter than shoot1
-      if(cpuMem[currentPlayer/2].collx2>allPlayer[target].x){//shoot should be shorter than shoot2
-        if(cpuMem[currentPlayer/2].collx1>cpuMem[currentPlayer/2].collx2){
-          ia_power = cpuMem[currentPlayer/2].power2-1;
-          ia_angle = cpuMem[currentPlayer/2].angle2;
-        }else{
-          ia_power = cpuMem[currentPlayer/2].power1-1;
-          ia_angle = cpuMem[currentPlayer/2].angle1;
-        }
-      }else{//shoot should be longer than shoot2
-      
-      }
-    }else{//shoot should be longer than shoot1
-      if(cpuMem[currentPlayer/2].collx2>allPlayer[target].x){//shoot should be shorter than shoot2
-        
-      }else{//shoot should be longer than shoot2
-      
-      }
-    }* /
-    ia_power = 5;
-    ia_angle = 4;
-    timer = 10;
-  }
-  
-  if(timer>0){
+  //this function can run only if landscape + player (only) are displayed (no cursor, no lifebar, no power, no level)
+  if(timer > 0){
     timer = timer -1;
   }else{
-    if(angle>ia_angle){
-      angle = angle - 1;
-      timer = 1;
+    if(ia.targetlocked==0){
+      //direction
+      for(fct_countr=0;fct_countr<2;fct_countr++){
+        //angle
+        for(fct_countr2=8;fct_countr2>0;fct_countr2--){
+          //power
+          for(fct_countr3=0;fct_countr3<10;fct_countr3++){
+            check = 0; 
+            rocket.x = allPlayer[currentPlayer].x+(1+(fct_countr))+(((trajParamY[fct_countr2]/10)*((fct_countr*2)-1)));
+            rocket.y = (allPlayer[currentPlayer].y+((trajParamY[fct_countr2]/10))+1);
+            rocket.x_traj = trajParamX[fct_countr2]/10*(fct_countr3/2)*((fct_countr*2)-1);
+            rocket.y_traj = trajParamY[fct_countr2]/10*(fct_countr3/2);
+            while(check == 0){
+              for(out_countr=0;out_countr<nbPlayer*nbTeam;out_countr++){
+                if(    allPlayer[out_countr].x-4 <= rocket.x 
+                    && allPlayer[out_countr].x+8 >= rocket.x 
+                    && allPlayer[out_countr].y-4 <= rocket.y 
+                    && allPlayer[out_countr].y+8 >= rocket.y 
+                    && allPlayer[out_countr].dead == 0
+                    && allPlayer[out_countr].team != allPlayer[currentPlayer].team
+                    ){
+                      if(ia.targetlocked==0){
+                        allPlayer[currentPlayer].dir = fct_countr;
+                        ia.angle = fct_countr2;
+                        ia.power = fct_countr3;
+                        if(allPlayer[out_countr].x-2 <= rocket.x 
+                          && allPlayer[out_countr].x+6 >= rocket.x 
+                          && allPlayer[out_countr].y-2 <= rocket.y 
+                          && allPlayer[out_countr].y+6 >= rocket.y 
+                          && allPlayer[out_countr].dead == 0
+                          && allPlayer[out_countr].team != allPlayer[currentPlayer].team)
+                      {
+                        ia.targetlocked=1;
+                        timer = 20;
+                      } 
+                    }
+                    check=1;
+                }
+                if(rocket.x>84)                         {check=1;}
+                if(rocket.x<0)                          {check=1;}
+                if(rocket.y>48)                         {check=1;}
+                if(landscape[rocket.x/4][rocket.y/4]<60){check=1;}
+                fn_nextProjPosition();
+              }
+            }
+          }
+        }
+      }
+      if(ia.targetlocked==0){
+        ia.targetlocked=1;
+        timer = 20;
+      }
     }else{
-      if(power<ia_power){
-        power = power + 1;
+      //animation
+      if(angle!=ia.angle){
+        if(angle>ia.angle){angle = angle -1;}
+        else {
+          angle = angle +1;
+          if(angle==ia.angle){timer = 20;}
+        }
       }else{
-        float dir;
-        if(allPlayer[currentPlayer-1].dir==1){dir = 1;}
-        else{dir = -1;}
-        projPositionX = (allPlayer[currentPlayer-1].x+(trajParamX[angle-1]*dir));
-        projPositionY = allPlayer[currentPlayer-1].y+trajParamY[angle-1];
-        projTrajX = (((trajParamX[angle-1])/5)*(power/3))*dir;
-        projTrajY = ((trajParamY[angle-1])/5)*(power/3);
-        gamestatus=ANIMFIRE;
+        if(power<ia.power){
+          power = power + 1;
+        }else{
+          rocket.x = allPlayer[currentPlayer].x+(1+(allPlayer[currentPlayer].dir))+(((trajParamX[angle]/10)*((allPlayer[currentPlayer].dir*2)-1)));
+          rocket.y = (allPlayer[currentPlayer].y+((trajParamY[angle]/10))+1);
+          rocket.x_traj = trajParamX[angle]/10*(power/2)*((allPlayer[currentPlayer].dir*2)-1);
+          rocket.y_traj = trajParamY[angle]/10*(power/2);
+          gamestatus = ANIMFIRE;
+        }
       }
     }
-  }
-  */
+  }  
 }
 
