@@ -10,12 +10,12 @@ void outpt_selectMap(){
     gb.display.drawRect(3, 7, 23, 14);
     gb.display.drawBitmap(4,9,options);
   }
-  for (byte i=0; i<nbAvailableLevel; i++) {
-    x = 4+(((i+1)%3)*27);
-    y = 8+(((i+1)/3)*17)-z;
-    gb.display.drawBitmap(x,y,levels[i]);
+  for (out_countr=0; out_countr<nbAvailableLevel; out_countr++) {
+    x = 4+(((out_countr+1)%3)*27);
+    y = 8+(((out_countr+1)/3)*17)-z;
+    gb.display.drawBitmap(x,y,levels[out_countr]);
     gb.display.drawRect(x-1, y-1, 23, 14);
-    if(i+1==gamelevel){gb.display.drawRect(x-2, y-2, 25, 16);}
+    if(out_countr+1==gamelevel){gb.display.drawRect(x-2, y-2, 25, 16);}
   }
 
   gb.display.setColor(WHITE);
@@ -40,37 +40,64 @@ void outpt_options(){
   gb.display.cursorY = 0;
   gb.display.cursorX = 28;
   gb.display.print("Settings");
-  gb.display.cursorY = 15;
+  
+  gb.display.cursorY = 12;
   gb.display.cursorX = 16;
   gb.display.print("Player:  <");
   gb.display.print(nbTeam);
   gb.display.print(">");
-  gb.display.cursorY = 25;
+  
+  gb.display.cursorY = 18;
   gb.display.cursorX = 16;
   gb.display.print("Units:   <");
   gb.display.print(nbPlayer);
   gb.display.print(">");
   
-  gb.display.cursorY = 35;
+  gb.display.cursorY = 24;
+  gb.display.cursorX = 16;
+  gb.display.print("Life:    <");
+  gb.display.print(unitLife);
+  gb.display.print(">");
+   
+  gb.display.cursorY = 30;
+  gb.display.cursorX = 16;
+  gb.display.print("NbCPU:   <");
+  gb.display.print(nbCpuTeam);
+  gb.display.print(">");
+  
+  gb.display.cursorY = 36;
+  gb.display.cursorX = 16;
+  gb.display.print("Gravity: <");
+  gb.display.print(gravity);
+  gb.display.print(">");
+  
+  gb.display.cursorY = 42;
   gb.display.cursorX = 16;
   gb.display.print("Back");
 
-  gb.display.drawBitmap(11,16+(setting*10),landscapetiles[30]);
-}
-
-//##################################################################
-//##################################################################
-void outpt_loading(){
-  gb.display.print("Loading Map...");
+  gb.display.drawBitmap(11,13+(setting*6),units[0]);
 }
 
 //##################################################################
 //##################################################################
 void outpt_landscape() {
-  for (byte y=0; y<12; y++) {
-    for (byte x=0; x<21; x++) {
-      if (landscape[x][y] != 0) {
-        gb.display.drawBitmap(x*4,y*4,landscapetiles[landscape[x][y]-1]);
+  for (out_countr=0; out_countr<12; out_countr++) {
+    for (out_countr2=0; out_countr2<21; out_countr2++) {
+      /*gb.display.drawBitmap(out_countr2*4,out_countr*4,landscapetiles[landscape[out_countr2][out_countr]/10]);*/
+      
+      switch(landscape[out_countr2][out_countr]%10){
+        case 0:
+             gb.display.drawBitmap(out_countr2*4,out_countr*4,landscapetiles[landscape[out_countr2][out_countr]/10]);
+             break;
+        case 1:
+             gb.display.drawBitmap(out_countr2*4,out_countr*4,landscapetiles[landscape[out_countr2][out_countr]/10],ROT180,NOFLIP);
+             break;
+        case 2:
+             gb.display.drawBitmap(out_countr2*4,out_countr*4,landscapetiles[landscape[out_countr2][out_countr]/10],ROTCW,NOFLIP);
+             break;
+        case 3:
+             gb.display.drawBitmap(out_countr2*4,out_countr*4,landscapetiles[landscape[out_countr2][out_countr]/10],ROTCCW,NOFLIP);
+             break;
       }
     }
   }
@@ -79,26 +106,26 @@ void outpt_landscape() {
 //##################################################################
 //##################################################################
 void outpt_players() {
-  for(byte i=0;i<nbPlayer*nbTeam;i++){    
-    if(allPlayer[i].dead==0){
-      gb.display.drawBitmap(allPlayer[i].x,allPlayer[i].y,landscapetiles[30+allPlayer[i].team]);
+  for(out_countr=0;out_countr<nbPlayer*nbTeam;out_countr++){    
+    if(allPlayer[out_countr].dead==0){
+      gb.display.drawBitmap(allPlayer[out_countr].x,allPlayer[out_countr].y,units[allPlayer[out_countr].team]);
     }else{
-      gb.display.drawFastVLine(allPlayer[i].x+1,allPlayer[i].y,4);
-      switch(allPlayer[i].team){
+      gb.display.drawFastVLine(allPlayer[out_countr].x+1,allPlayer[out_countr].y,4);
+      switch(allPlayer[out_countr].team){
         case 0:
-          gb.display.drawFastHLine(allPlayer[i].x,allPlayer[i].y+1,3);
+          gb.display.drawFastHLine(allPlayer[out_countr].x,allPlayer[out_countr].y+1,3);
           break;
         case 1:
-          gb.display.drawFastHLine(allPlayer[i].x,allPlayer[i].y,3);
-          gb.display.drawFastHLine(allPlayer[i].x,allPlayer[i].y+2,3);
+          gb.display.drawFastHLine(allPlayer[out_countr].x,allPlayer[out_countr].y,3);
+          gb.display.drawFastHLine(allPlayer[out_countr].x,allPlayer[out_countr].y+2,3);
           break;      
         case 2:
-          gb.display.drawPixel(allPlayer[i].x,allPlayer[i].y);
-          gb.display.drawPixel(allPlayer[i].x+2,allPlayer[i].y+1);
+          gb.display.drawPixel(allPlayer[out_countr].x,allPlayer[out_countr].y);
+          gb.display.drawPixel(allPlayer[out_countr].x+2,allPlayer[out_countr].y+1);
           break; 
         case 3:
-          gb.display.drawPixel(allPlayer[i].x,allPlayer[i].y+1);
-          gb.display.drawPixel(allPlayer[i].x+2,allPlayer[i].y);
+          gb.display.drawPixel(allPlayer[out_countr].x,allPlayer[out_countr].y+1);
+          gb.display.drawPixel(allPlayer[out_countr].x+2,allPlayer[out_countr].y);
           break; 
       }
     }
@@ -117,9 +144,9 @@ void outpt_power(){
     gb.display.drawPixel(11,0);
     gb.display.drawPixel(11,3);
     
-    for(int pwr=1; pwr<power+1; pwr++){
-      gb.display.drawPixel(pwr,1);
-      gb.display.drawPixel(pwr,2);
+    for(out_countr=1; out_countr<power+1; out_countr++){
+      gb.display.drawPixel(out_countr,1);
+      gb.display.drawPixel(out_countr,2);
     }
   }
 }
@@ -127,17 +154,17 @@ void outpt_power(){
 //################################################################## 
 //##################################################################
 void outpt_life(){
-  for(byte i=0;i<nbPlayer*nbTeam;i++){
-    if(allPlayer[i].dead==0 && allPlayer[i].fall==0){
-      if(i==currentPlayer && jumpStatus!=0){}
+  for(out_countr=0;out_countr<nbPlayer*nbTeam;out_countr++){
+    if(allPlayer[out_countr].dead==0 && allPlayer[out_countr].fall==0){
+      if(out_countr==currentPlayer && jumpStatus!=0){}
       else{
         gb.display.setColor(BLACK);
-        switch(allPlayer[i].life){
+        switch(allPlayer[out_countr].life){
           case 3:
-               gb.display.drawFastHLine(allPlayer[i].x,allPlayer[i].y-3,4); 
+               gb.display.drawFastHLine(allPlayer[out_countr].x,allPlayer[out_countr].y-3,4); 
                break; 
           case 2:
-               gb.display.drawFastHLine(allPlayer[i].x,allPlayer[i].y-3,2); 
+               gb.display.drawFastHLine(allPlayer[out_countr].x,allPlayer[out_countr].y-3,2); 
                break; 
         }
       }
@@ -157,37 +184,63 @@ void outpt_team(){
 //################################################################## 
 //##################################################################
 void outpt_cursor(){
-  
-  byte dir;
-  byte displayX;
-  byte displayCenter;
-  if(allPlayer[currentPlayer].dir==1){
-    dir=1;
-    displayX = 0;
-    displayCenter = 2;
-  }else{
-    dir = -1;
-    displayX = 3;
-    displayCenter = 1;
-  }
+
   gb.display.setColor(WHITE);
-  //gb.display.drawPixel(allPlayer[currentPlayer].x+((trajParamX[angle-1]+2)*dir)+displayX+0  ,allPlayer[currentPlayer].y+(trajParamY[angle-1])+1);
-  gb.display.drawPixel(allPlayer[currentPlayer].x+displayCenter                             ,allPlayer[currentPlayer].y+1);
+  gb.display.drawPixel(allPlayer[currentPlayer].x+allPlayer[currentPlayer].dir+1                             
+                      ,allPlayer[currentPlayer].y+1);
+  gb.display.drawPixel(allPlayer[currentPlayer].x+allPlayer[currentPlayer].dir+1  +(((trajParamX[angle]/10)*((allPlayer[currentPlayer].dir*2)-1)*1.5))                           
+                      ,allPlayer[currentPlayer].y+1                               +((trajParamY[angle]/10)*1.5));
+
   gb.display.setColor(BLACK);
-  gb.display.drawLine (allPlayer[currentPlayer].x+((trajParamX[angle-1]+2)*dir)+displayX-1  ,allPlayer[currentPlayer].y+(trajParamY[angle-1])+1,
-                       allPlayer[currentPlayer].x+((trajParamX[angle-1]+2)*dir)+displayX+0  ,allPlayer[currentPlayer].y+(trajParamY[angle-1])+0);
-  gb.display.drawLine (allPlayer[currentPlayer].x+((trajParamX[angle-1]+2)*dir)+displayX+1  ,allPlayer[currentPlayer].y+(trajParamY[angle-1])+1,
-                       allPlayer[currentPlayer].x+((trajParamX[angle-1]+2)*dir)+displayX+0  ,allPlayer[currentPlayer].y+(trajParamY[angle-1])+2);
-                    
+  gb.display.drawLine (allPlayer[currentPlayer].x+allPlayer[currentPlayer].dir+1  +(((trajParamX[angle]/10)*((allPlayer[currentPlayer].dir*2)-1)*1.5))  -1                           
+                      ,allPlayer[currentPlayer].y+1                               +((trajParamY[angle]/10)*1.5)                                         +0
+                      ,allPlayer[currentPlayer].x+allPlayer[currentPlayer].dir+1  +(((trajParamX[angle]/10)*((allPlayer[currentPlayer].dir*2)-1)*1.5))  +0                         
+                      ,allPlayer[currentPlayer].y+1                               +((trajParamY[angle]/10)*1.5)                                         -1);
+  gb.display.drawLine (allPlayer[currentPlayer].x+allPlayer[currentPlayer].dir+1  +(((trajParamX[angle]/10)*((allPlayer[currentPlayer].dir*2)-1)*1.5))  +1                           
+                      ,allPlayer[currentPlayer].y+1                               +((trajParamY[angle]/10)*1.5)                                         +0
+                      ,allPlayer[currentPlayer].x+allPlayer[currentPlayer].dir+1  +(((trajParamX[angle]/10)*((allPlayer[currentPlayer].dir*2)-1)*1.5))  +0                         
+                      ,allPlayer[currentPlayer].y+1                               +((trajParamY[angle]/10)*1.5)                                         +1);
+
 }
 
 //##################################################################
 //##################################################################
 void outpt_projectile(){
-  gb.display.drawPixel(projPositionX,projPositionY);
-  gb.display.drawPixel(projPositionX+1,projPositionY);
-  gb.display.drawPixel(projPositionX,projPositionY-1);
-  gb.display.drawPixel(projPositionX+1,projPositionY-1);
+  gb.display.drawPixel(rocket.x,rocket.y);
+  gb.display.drawPixel(rocket.x+1,rocket.y);
+  gb.display.drawPixel(rocket.x,rocket.y-1);
+  gb.display.drawPixel(rocket.x+1,rocket.y-1);
+}
+
+//##################################################################
+//##################################################################
+void outpt_selectUnit(){
+  for(out_countr=0;out_countr<nbPlayer*nbTeam;out_countr++){
+    if(allPlayer[out_countr].timer>0){
+      out_countr3=1;
+      gb.display.drawFastVLine(allPlayer[out_countr].x+1, allPlayer[out_countr].y-6-(allPlayer[out_countr].timer%4), 2);
+      gb.display.drawPixel(allPlayer[out_countr].x  , allPlayer[out_countr].y-3-(allPlayer[out_countr].timer%4));
+      gb.display.drawPixel(allPlayer[out_countr].x+1, allPlayer[out_countr].y-2-(allPlayer[out_countr].timer%4));
+      gb.display.drawPixel(allPlayer[out_countr].x+2, allPlayer[out_countr].y-3-(allPlayer[out_countr].timer%4));
+      allPlayer[out_countr].timer=allPlayer[out_countr].timer-1;
+    }
+  }
+}
+
+//##################################################################
+//##################################################################
+void outpt_damage(){
+  for(out_countr=0;out_countr<nbPlayer*nbTeam;out_countr++){
+    if(allPlayer[out_countr].timer%3==2){
+       gb.display.setColor(WHITE);
+       gb.display.fillRect(allPlayer[out_countr].x,allPlayer[out_countr].y,4,4);
+       gb.display.setColor(BLACK);
+    }
+    if(allPlayer[out_countr].timer>0){
+      allPlayer[out_countr].timer=allPlayer[out_countr].timer-1;
+      out_countr3=1;
+    }
+  }
 }
 
 //##################################################################
@@ -202,11 +255,8 @@ void outpt_pause() {
   gb.display.cursorY = 25;
   gb.display.cursorX = 16;
   gb.display.print("Quit to New Map");
-  gb.display.cursorY = 35;
-  gb.display.cursorX = 16;
-  gb.display.print("Quit to Homepage");
 
-  gb.display.drawBitmap(11,16+(setting*10),landscapetiles[30]);
+  gb.display.drawBitmap(11,16+(setting*10),units[0]);
 }
 
 //##################################################################
@@ -215,43 +265,43 @@ void outpt_boom() {
   switch(timer){
     case  0:
           gb.display.setColor(INVERT);
-          gb.display.drawPixel(projPositionX-1,projPositionY-1);          
+          gb.display.drawPixel(rocket.x-1,rocket.y-1);          
           break;
     
     case  1:
           gb.display.setColor(INVERT);
-          gb.display.drawPixel(projPositionX-1,projPositionY-1);          
+          gb.display.drawPixel(rocket.x-1,rocket.y-1);          
           break;    
     
     case  2:
           gb.display.setColor(WHITE);
-          gb.display.drawPixel(projPositionX-1,projPositionY-1);
+          gb.display.drawPixel(rocket.x-1,rocket.y-1);
           gb.display.setColor(INVERT);
-          gb.display.drawLine(projPositionX-2,projPositionY-1 ,projPositionX-1 ,projPositionY-2);
-          gb.display.drawLine(projPositionX  ,projPositionY-1 ,projPositionX-1 ,projPositionY  );         
+          gb.display.drawLine(rocket.x-2,rocket.y-1 ,rocket.x-1 ,rocket.y-2);
+          gb.display.drawLine(rocket.x  ,rocket.y-1 ,rocket.x-1 ,rocket.y  );         
           break;
     
     case  3:
           gb.display.setColor(WHITE);
-          gb.display.fillRect(projPositionX-1,projPositionY-1, 2, 2);
+          gb.display.fillRect(rocket.x-1,rocket.y-1, 2, 2);
           gb.display.setColor(INVERT);
-          gb.display.drawLine(projPositionX-1 ,projPositionY-2 ,projPositionX   ,projPositionY-2);
-          gb.display.drawLine(projPositionX+1 ,projPositionY-1 ,projPositionX+1 ,projPositionY  );
-          gb.display.drawLine(projPositionX-2 ,projPositionY-1 ,projPositionX-2 ,projPositionY  );
-          gb.display.drawLine(projPositionX-1 ,projPositionY+1 ,projPositionX   ,projPositionY+1);
+          gb.display.drawLine(rocket.x-1 ,rocket.y-2 ,rocket.x   ,rocket.y-2);
+          gb.display.drawLine(rocket.x+1 ,rocket.y-1 ,rocket.x+1 ,rocket.y  );
+          gb.display.drawLine(rocket.x-2 ,rocket.y-1 ,rocket.x-2 ,rocket.y  );
+          gb.display.drawLine(rocket.x-1 ,rocket.y+1 ,rocket.x   ,rocket.y+1);
           break;
     
     case  5:
           gb.display.setColor(WHITE);
-          gb.display.drawPixel(projPositionX,projPositionY);
+          gb.display.drawPixel(rocket.x,rocket.y);
           gb.display.setColor(INVERT);
-          gb.display.drawLine(projPositionX-1,projPositionY ,projPositionX ,projPositionY-1);
-          gb.display.drawLine(projPositionX  ,projPositionY+1 ,projPositionX+1 ,projPositionY  );
+          gb.display.drawLine(rocket.x-1,rocket.y   ,rocket.x   ,rocket.y-1);
+          gb.display.drawLine(rocket.x  ,rocket.y+1 ,rocket.x+1 ,rocket.y  );
           break;
     
     case  6:
           gb.display.setColor(INVERT);
-          gb.display.drawPixel(projPositionX,projPositionY);
+          gb.display.drawPixel(rocket.x,rocket.y);
           break;
     
   }
@@ -282,12 +332,12 @@ void outpt_title() {
 
 //##################################################################
 //##################################################################
-void outpt_soundfx(int fxno, int channel) {
-  gb.sound.command(0,soundfx[fxno][6],0,channel); // set volume
-  gb.sound.command(1,soundfx[fxno][0],0,channel); // set waveform
-  gb.sound.command(2,soundfx[fxno][5],-soundfx[fxno][4],channel); // set volume slide
-  gb.sound.command(3,soundfx[fxno][3],soundfx[fxno][2]-58,channel); // set pitch slide
-  gb.sound.playNote(soundfx[fxno][1],soundfx[fxno][7],channel); // play note
+void outpt_soundfx(byte fxno) {
+  gb.sound.command(0,soundfx[fxno][6],0,0); // set volume
+  gb.sound.command(1,soundfx[fxno][0],0,0); // set waveform
+  gb.sound.command(2,soundfx[fxno][5],-soundfx[fxno][4],0); // set volume slide
+  gb.sound.command(3,soundfx[fxno][3],soundfx[fxno][2]-58,0); // set pitch slide
+  gb.sound.playNote(soundfx[fxno][1],soundfx[fxno][7],0); // play note
 }
 
 

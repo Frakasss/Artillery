@@ -173,7 +173,7 @@ void fnctn_definePlayer(){
     allPlayer[fct_countr].team = fct_countr / nbPlayer;
     allPlayer[fct_countr].fall=0;
     allPlayer[fct_countr].isIA = 0; 
-    if(allPlayer[fct_countr].team-1>=nbPlayer-nbCpuTeam){
+    if(allPlayer[fct_countr].team>=nbTeam-nbCpuTeam){
       allPlayer[fct_countr].isIA=1;
     }
     allPlayer[fct_countr].timer = 0;
