@@ -13,6 +13,7 @@ void fnctn_checkbuttons() {
               gamestatus=OPTIONS;
               setting=0;
             }else{
+              randomVal = random(0,21);
               gamestatus=NEW_LEVEL;
             }
           }
@@ -163,7 +164,7 @@ void fnctn_definePlayer(){
   for(fct_countr=0;fct_countr<21-tmp;fct_countr++){
     tmp2 = randm[fct_countr];
     randm[fct_countr] = randm[fct_countr+tmp];
-    randm[tmp] = tmp2;
+    randm[fct_countr+tmp] = tmp2;
   }
 
   

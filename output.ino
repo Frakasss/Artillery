@@ -2,7 +2,6 @@
 //##################################################################
 void outpt_selectMap(){
   byte x,y,z;
-  
   if((((gamelevel)/3)*17)+20>48){
     z=(((gamelevel-3)/3))*17;
   }else{
@@ -13,15 +12,16 @@ void outpt_selectMap(){
   for (out_countr=0; out_countr<nbAvailableLevel; out_countr++) {
     x = 4+(((out_countr+1)%3)*27);
     y = 8+(((out_countr+1)/3)*17)-z;
-    gb.display.drawBitmap(x,y,levels[out_countr]);
-    gb.display.drawRect(x-1, y-1, 23, 14);
-    if(out_countr+1==gamelevel){gb.display.drawRect(x-2, y-2, 25, 16);}
+    if(y<100){
+      gb.display.drawRect(x-1, y-1, 23, 14);
+      gb.display.drawBitmap(x,y,levels[out_countr]);
+      if(out_countr+1==gamelevel){gb.display.drawRect(x-2, y-2, 25, 16);}
+    }
   }
 
   gb.display.setColor(WHITE);
   gb.display.fillRect(0, 0, 84, 6);
   gb.display.setColor(BLACK);
-    
   if(gamelevel==0){
     gb.display.cursorX = 27;
     gb.display.print("Settings");
@@ -317,11 +317,36 @@ void outpt_gameOver(){
     gb.display.drawRect(5,6,74,22);
     gb.display.cursorY = 11;
     gb.display.cursorX = 17;
-    gb.display.print("Player ");
+    if(allPlayer[currentPlayer].isIA==0){
+      gb.display.print("Player ");
+    }else{
+      gb.display.print("  CPU ");
+    }
     gb.display.print(currentTeam+1);
     gb.display.println(" win!");
     gb.display.cursorX = 7;
-    gb.display.println("Others are losers!");
+    switch(randomVal%10){
+      case 0: gb.display.println("Others are losers!");break;
+      
+      case 1: gb.display.println("    Congrats!     ");break;
+      
+      case 2: gb.display.println(" Better next time ");break;
+      
+      case 3: gb.display.println("   Frtzz Gzzuit!  ");break;
+      
+      case 4: gb.display.println(" Game by Frakasss ");break;
+      
+      case 5: gb.display.println("  Not so bad...   ");break;
+      
+      case 6: gb.display.println("  WHO'S THE BEST? ");break;
+      
+      case 7: gb.display.println("Not really fair...");break;
+      
+      case 8: gb.display.println("Quite boring game.");break;
+      
+      case 9: gb.display.println(" Just dust in eye ");break;
+      
+    }
 }
 
 //##################################################################

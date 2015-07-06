@@ -70,6 +70,7 @@ byte out_countr2;
 byte out_countr3;
 byte check;
 byte consttimer;
+byte randomVal;
 
 //Player
 byte currentTeam;
@@ -92,7 +93,7 @@ byte gravity;
 //----------------------------------------------------------------------------    
 extern const byte PROGMEM gamelogo[];
 extern const byte PROGMEM landscapetiles[12][6];
-extern const byte PROGMEM levels[11][38];
+extern const byte PROGMEM levels[26][38];
 extern const byte PROGMEM options[];
 extern const char trajParamX[];
 extern const char trajParamY[];
@@ -127,10 +128,11 @@ void main_initGame(){
   gamestatus=SELECT_MAP;
   
   gamelevel=0;
-  nbAvailableLevel=11;
+  nbAvailableLevel=26;
   consttimer = 20;
   setting=0;
   timer=0;
+  randomVal = random(0,21);
 
   nbTeam = 2; 
   nbPlayer = 3;
