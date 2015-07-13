@@ -147,7 +147,8 @@ void main_initGame(){
 // loop
 //----------------------------------------------------------------------------    
 void loop(){
-  if(gb.update()){    
+  if(gb.update()){
+    gb.battery.show = false;
     switch(gamestatus)
     {
       case SELECT_MAP :
@@ -156,6 +157,7 @@ void loop(){
            break;
            
       case OPTIONS :
+           gb.battery.show = true;
            outpt_options();
            fnctn_checkbuttons();
            break;
@@ -195,9 +197,12 @@ void loop(){
            outpt_players();
 
            if(allPlayer[currentPlayer].isIA==0){
-             fnctn_checkbuttons();}
-           else{
+             fnctn_checkbuttons();
+           } else {
              fnctn_ia();
+             if(gb.buttons.pressed(BTN_C)){
+               gamestatus = PAUSE;
+             }
            }      
            
            fnctn_checkJump();

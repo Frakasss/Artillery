@@ -17,58 +17,79 @@ void fnctn_checkbuttons() {
               gamestatus=NEW_LEVEL;
             }
           }
-          if(gb.buttons.pressed(BTN_C)){gb.titleScreen(gamelogo);}
+          if(gb.buttons.pressed(BTN_C)){
+            gb.titleScreen(gamelogo);
+            gb.battery.show = false;
+          }
           break;
      
      case OPTIONS :
-          if(gb.buttons.pressed(BTN_DOWN) && setting<5){setting=setting+1;}
-          if(gb.buttons.pressed(BTN_UP) && setting>0){setting=setting-1;}
+          if(gb.buttons.pressed(BTN_DOWN)){
+            if(setting < 5) setting=setting+1; else setting = 0;
+          }
+          if(gb.buttons.pressed(BTN_UP)){
+            if(setting > 0) setting=setting-1; else setting = 5;
+          }
           if(gb.buttons.pressed(BTN_RIGHT)){
             switch(setting){
               case 0:
-                   if(nbTeam<4){nbTeam=nbTeam+1;}
+                   if(nbTeam<4) nbTeam=nbTeam+1; else nbTeam = 2;
+                   if(nbCpuTeam==nbTeam) nbCpuTeam=nbCpuTeam-1;
                    break;
               case 1:
-                   if(nbPlayer<4){nbPlayer=nbPlayer+1;}
+                   if(nbPlayer<4) nbPlayer=nbPlayer+1; else nbPlayer = 1;
                    break;
               case 2:
-                   if(unitLife<3){unitLife=unitLife+1;}
+                   if(unitLife<3) unitLife=unitLife+1; else unitLife = 1;
                    break;
               case 3:
-                   if(nbCpuTeam<nbTeam-1){nbCpuTeam=nbCpuTeam+1;}
+                   if(nbCpuTeam<nbTeam-1) nbCpuTeam=nbCpuTeam+1; else nbCpuTeam = 0;
+                   if(nbCpuTeam==nbTeam) nbCpuTeam=nbCpuTeam-1;
                    break;
               case 4:
-                   if(gravity<3){gravity=gravity+1;}
+                   if(gravity<3) gravity=gravity+1; else gravity = 1;
                    break;
             }
           }
           if(gb.buttons.pressed(BTN_LEFT)){
             switch(setting){
               case 0:
-                   if(nbTeam>2){nbTeam=nbTeam-1;if(nbCpuTeam==nbTeam){nbCpuTeam=nbCpuTeam-1;}}
+                   if(nbTeam>2) nbTeam=nbTeam-1; else nbTeam = 4;
+                   if(nbCpuTeam==nbTeam) nbCpuTeam=nbCpuTeam-1;
                    break;
               case 1:
-                   if(nbPlayer>1){nbPlayer=nbPlayer-1;}
+                   if(nbPlayer>1) nbPlayer=nbPlayer-1; else nbPlayer = 4;
                    break;
               case 2:
-                   if(unitLife>1){unitLife=unitLife-1;}
+                   if(unitLife>1) unitLife=unitLife-1; else unitLife = 3;
                    break;
               case 3:
-                   if(nbCpuTeam>0){nbCpuTeam=nbCpuTeam-1;}
+                   if(nbCpuTeam>0) nbCpuTeam=nbCpuTeam-1;  else nbCpuTeam = nbTeam;
+                   if(nbCpuTeam==nbTeam) nbCpuTeam=nbCpuTeam-1;
                    break;
               case 4:
-                   if(gravity>1){gravity=gravity-1;}
+                   if(gravity>1) gravity=gravity-1; else gravity = 3;
                    break;
             }
           }
-          if(gb.buttons.pressed(BTN_A) && setting==5){gamestatus=SELECT_MAP;}
-          if(gb.buttons.pressed(BTN_C)){gb.titleScreen(gamelogo);}
+          if(gb.buttons.pressed(BTN_B) || (gb.buttons.pressed(BTN_A) && setting==5)){
+            gamestatus=SELECT_MAP;
+          }
+          if(gb.buttons.pressed(BTN_C)){
+            gb.titleScreen(gamelogo);
+            gb.battery.show = false;
+          }
           break;
           
      case PAUSE :
-          if(gb.buttons.pressed(BTN_DOWN) && setting<2){setting=setting+1;}
-          if(gb.buttons.pressed(BTN_UP) && setting>0){setting=setting-1;}
-          if(gb.buttons.pressed(BTN_A)){
+          if(gb.buttons.pressed(BTN_DOWN)){
+            if(setting < 1) setting=setting+1; else setting = 0;
+          }
+          if(gb.buttons.pressed(BTN_UP)){
+            if(setting > 0) setting=setting-1; else setting = 1;
+          }
+          if(gb.buttons.pressed(BTN_B)) gamestatus = RUNNING;
+          if(gb.buttons.released(BTN_A)){
             switch(setting){
               case 0:
                    gamestatus=RUNNING;
@@ -79,7 +100,9 @@ void fnctn_checkbuttons() {
                    break;
             } 
           }
-          if(gb.buttons.pressed(BTN_C)){gb.titleScreen(gamelogo);}
+          if(gb.buttons.pressed(BTN_C)){
+            gamestatus=SELECT_MAP;
+          }
           break;
           
            
