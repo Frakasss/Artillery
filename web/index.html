@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html class=" js flexbox flexboxlegacy canvas canvastext webgl no-touch geolocation postmessage websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers applicationcache svg inlinesvg smil svgclippaths">
+    <head>
+        <meta charset="utf-8" />
+        <title>Game Makers - [Gamebuino] Zombie Escape </title>
+		<style type="text/css">
+			canvas
+			{
+				vertical-align:middle;
+				width:336px;
+				height:192px;
+				image-rendering:pixelated;
+				text-align:center;
+			}
+
+			.specialP
+			{
+				background:#ccc; 
+				width:915px;
+				height:570px;
+				line-height:570px;
+				text-align:center;
+				background-image:url("images/IMG_2625.JPG");
+				background-repeat:no-repeat;
+				background-position: center;
+				margin-left: auto;
+				margin-right: auto;
+			}
+
+			body
+			{
+				background-color:black;
+				font-family: "Arial","Trebuchet MS","Arial","sans-serif";
+				color: black;
+				height:100%;
+				margin:0;
+				padding:0;
+			}	
+
+			.container_page
+			{
+				min-width:1050px;
+				max-width: 1500px;
+				width:100%;
+				background-color:white;
+				min-height:100%-10px;
+				margin: auto;
+				position:relative;
+			}	
+
+			.titre {
+				font-size: 3em;
+				font-weight: bold;
+				padding: 20px;
+				text-align: center;
+			}	
+
+			.emulatorContainer{
+				padding:20px;
+				font-size:16px;
+				max-width:1000px;
+				margin-left: auto;
+				margin-right: auto;
+				text-align: center;
+			}
+			
+			.size_100{} 
+			
+			.legende{
+				position:relative;
+				background-color: rgb(240,240,240);
+				box-shadow: 0px 2px 5px #1c1a19;
+				padding: 10px;
+				color: black;
+				overflow: hidden;
+				width: 94%;
+				min-width:250px;
+				max-width:1200px;
+				justify-content: center;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			
+			.images{
+				background-color: black;
+				overflow: hidden;
+				padding:10px;
+				justify-content: center;
+				text-align: center;
+			}			
+		</style>
+		
+    </head>
+
+    <body>
+		<div class="container_page">
+			<div id="body">
+				<div class="titre">Artillery</div>
+						
+				<div class="emulatorContainer">
+					<p class="specialP">
+						<canvas id="canvas" tabindex="1" width="84" height="48" ></canvas>
+					</p>
+					<button id="loader">Start / Reset</button>				
+					<div id="error"></div>	
+				</div>	
+				
+				<div class="legende" >
+					<div class="images">
+						<img src="images\Controles_PAD.JPG" alt="Jeu Gamebuino">
+						<img src="images\Controles_BUTTON.JPG" alt="Jeu Gamebuino">
+					</div>
+				</div>											
+			</div>
+			
+			<br><br>
+
+		</div>
+
+		<script type="text/javascript" src="javascript/func.js"></script>
+		<script type="text/javascript" src="javascript/modernizr.js"></script>
+		<script type="text/javascript" src="javascript/jquery.js"></script>
+
+		<script type="text/javascript" src="javascript/class.js"></script>
+		<script type="text/javascript" src="javascript/Deltas.js"></script>	
+		<script type="text/javascript" src="javascript/MemoryMappedRegister.js"></script>
+		<script type="text/javascript" src="javascript/AtmelRegisters.js"></script>
+		<script type="text/javascript" src="javascript/FlagsRegister.js"></script>
+		<script type="text/javascript" src="javascript/PortRegister.js"></script>
+		<script type="text/javascript" src="javascript/AtmelIO.js"></script>
+		<script type="text/javascript" src="javascript/AtmelContext.js"></script>
+		<script type="text/javascript" src="javascript/AtmelProcessor.js"></script>
+		<script type="text/javascript" src="javascript/ADC.js"></script>
+		<script type="text/javascript" src="javascript/Buttons.js"></script>
+		<script type="text/javascript" src="javascript/SPI.js"></script>
+		<script type="text/javascript" src="javascript/USART.js"></script>
+		<script type="text/javascript" src="javascript/EEPROM.js"></script>
+		<script type="text/javascript" src="javascript/Lcd.js"></script>
+		<script type="text/javascript" src="javascript/SdDevice.js"></script>
+		<script type="text/javascript" src="javascript/AudioPlayer.js"></script>
+		<script type="text/javascript" src="javascript/HexDecoder.js"></script>
+		<script type="text/javascript" src="javascript/Bootloader.js"></script>
+		<script type="text/javascript" src="javascript/Simulation.js"></script>		
+		<script type="text/javascript" src="javascript/Loader - Artillery.js"></script>
+    </body>
+</html>		
